@@ -5,6 +5,8 @@ import { GraduationCap, Shield, Users, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import logoSenac from "@/assets/logo_senac_branca.png";
+
 
 const roles: { value: UserRole; label: string; icon: React.ReactNode; desc: string }[] = [
   { value: "aluno", label: "Aluno", icon: <GraduationCap className="h-6 w-6" />, desc: "Submeta certificados e acompanhe suas horas" },
@@ -41,7 +43,7 @@ const Login = () => {
         </div>
         <div className="relative z-10 text-center max-w-md">
           <div >
-            <img src="../public/logo_senac_branca.png" alt="Logo do Senac" />
+            <img src={logoSenac} alt="Logo do Senac" />
           </div>
           <h1 className="text-4xl font-bold text-primary-foreground mb-4" style={{ fontFamily: 'Plus Jakarta Sans' }}>
             Atividades Complementares
