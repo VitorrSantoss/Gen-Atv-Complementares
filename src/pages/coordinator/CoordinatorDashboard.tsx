@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 // Importando os componentes de Popover e ScrollArea
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
+// Importando o hook de navegação
+import { useNavigate } from "react-router-dom";
 
 const stats = [
   { label: "Alunos Vinculados", value: 85, icon: Users, color: "gradient-primary" },
@@ -39,6 +40,9 @@ const mockNotifications = [
 ];
 
 const CoordinatorDashboard = () => {
+  // Inicializando o hook de navegação
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-8">
       <div className="flex items-start justify-between">
@@ -90,7 +94,11 @@ const CoordinatorDashboard = () => {
             </ScrollArea>
             
             <div className="p-2 border-t border-border text-center bg-muted/30">
-              <Button variant="ghost" className="w-full text-xs h-8 text-primary hover:text-primary hover:bg-primary/10">
+              <Button 
+                variant="ghost" 
+                className="w-full text-xs h-8 text-primary hover:text-primary hover:bg-primary/10"
+                onClick={() => navigate('/coordenador/solicitacoes')}
+              >
                 Ver todas as solicitações
               </Button>
             </div>
