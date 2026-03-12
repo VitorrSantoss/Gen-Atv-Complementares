@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 const links = [
   { to: "/coordenador", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/coordenador/alunos", icon: Users, label: "Alunos" },
-  { to: "/coordenador/regras", icon: Settings, label: "Motor de Regras" },
+  { to: "/coordenador/regras", icon: Settings, label: "Regras" },
   { to: "/coordenador/solicitacoes", icon: FileCheck, label: "Solicitações" },
 ];
 

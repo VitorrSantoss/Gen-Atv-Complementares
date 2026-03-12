@@ -1,102 +1,146 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Pencil, Save } from "lucide-react";
+import { Plus, Pencil, Trash2, Info, Settings } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const initialRules = [
-  { id: "1", area: "Pesquisa", maxHoras: 80, descricao: "Iniciação científica, publicações, congressos" },
-  { id: "2", area: "Extensão", maxHoras: 60, descricao: "Projetos de extensão, voluntariado acadêmico" },
-  { id: "3", area: "Ensino", maxHoras: 40, descricao: "Monitoria, tutoria, cursos de capacitação" },
-  { id: "4", area: "Cultural", maxHoras: 30, descricao: "Eventos culturais, exposições, palestras" },
-  { id: "5", area: "Social", maxHoras: 30, descricao: "Trabalho voluntário, ações comunitárias" },
+  {
+    id: "1",
+    area: "Pesquisa",
+    maxHoras: 60,
+    descricao:
+      "Atividades de iniciacao científica, participacao em grupos de pesquisa, publicacao de artigos e apresentacao em congressos.",
+    cor: "border-blue-400",
+    bgBadge: "bg-blue-100 text-blue-700",
+  },
+  {
+    id: "2",
+    area: "Extensao",
+    maxHoras: 50,
+    descricao:
+      "Projetos sociais, voluntariado, atividades comunitarias organizadas pela universidade.",
+    cor: "border-emerald-400",
+    bgBadge: "bg-emerald-100 text-emerald-700",
+  },
+  {
+    id: "3",
+    area: "Ensino",
+    maxHoras: 40,
+    descricao: "Monitorias, cursos extracurriculares, participacao como tutor.",
+    cor: "border-blue-300",
+    bgBadge: "bg-blue-50 text-blue-600",
+  },
+  {
+    id: "4",
+    area: "Cultura",
+    maxHoras: 30,
+    descricao:
+      "Participacao em eventos culturais, grupos de teatro, musica e artes visuais.",
+    cor: "border-purple-400",
+    bgBadge: "bg-purple-100 text-purple-700",
+  },
+  {
+    id: "5",
+    area: "Esporte",
+    maxHoras: 20,
+    descricao:
+      "Competicoes esportivas universitarias, participacao em equipes oficiais.",
+    cor: "border-orange-400",
+    bgBadge: "bg-orange-100 text-orange-700",
+  },
 ];
 
 const CoordinatorRules = () => {
-  const [rules, setRules] = useState(initialRules);
-  const [editing, setEditing] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState(0);
-
-  const startEdit = (id: string, current: number) => { setEditing(id); setEditValue(current); };
-  const saveEdit = (id: string) => {
-    setRules(rules.map(r => r.id === id ? { ...r, maxHoras: editValue } : r));
-    setEditing(null);
-  };
-
+  const [rules] = useState(initialRules);
   const totalMax = rules.reduce((acc, r) => acc + r.maxHoras, 0);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>Motor de Regras</h1>
-        <p className="text-muted-foreground mt-1">Configure os limites de horas por área de atividade</p>
+    <div className="p-8 space-y-6 bg-slate-50 ">
+      {/* Header */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">Regras</h1>
+          <p className="text-lg text-slate-500">
+            Configure os limites de horas por area de atividade
+          </p>
+        </div>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6">
+              <Plus className="h-4 w-4 mr-2" /> Nova Regra
+            </Button>
       </div>
 
-      <Card className="glass-card border-0">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Limites por Área</CardTitle>
-            <div className="text-sm text-muted-foreground">
-              Total máximo: <span className="font-bold text-foreground">{totalMax}h</span>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Área</TableHead>
-                <TableHead>Máx. Horas</TableHead>
-                <TableHead className="hidden md:table-cell">Descrição</TableHead>
-                <TableHead className="text-right">Ação</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rules.map((rule) => (
-                <TableRow key={rule.id}>
-                  <TableCell className="font-medium">{rule.area}</TableCell>
-                  <TableCell>
-                    {editing === rule.id ? (
-                      <Input type="number" className="w-20" value={editValue} onChange={(e) => setEditValue(Number(e.target.value))} />
-                    ) : (
-                      <span className="font-semibold text-primary">{rule.maxHoras}h</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-muted-foreground">{rule.descricao}</TableCell>
-                  <TableCell className="text-right">
-                    {editing === rule.id ? (
-                      <Button variant="ghost" size="icon" onClick={() => saveEdit(rule.id)}><Save className="h-4 w-4 text-success" /></Button>
-                    ) : (
-                      <Button variant="ghost" size="icon" onClick={() => startEdit(rule.id, rule.maxHoras)}><Pencil className="h-4 w-4" /></Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Info Alert */}
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
+        <div className="bg-white p-1 rounded-full shadow-sm">
+          <Info className="h-5 w-5 text-blue-600" />
+        </div>
+        <div className="text-sm">
+          <p className="text-blue-900 font-semibold">
+            Carga horaria total do curso:{" "}
+            <span className="font-bold">200 horas</span>
+          </p>
+          <p className="text-blue-700">
+            Soma dos limites maximo por area:{" "}
+            <span className="font-bold">{totalMax}h</span> (pode exceder o total
+            pois o aluno nao precisa atingir o maximo em cada area)
+          </p>
+        </div>
+      </div>
 
-      <Card className="glass-card border-0">
-        <CardHeader><CardTitle className="text-lg">Visualização dos Limites</CardTitle></CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {rules.map((rule) => (
-              <div key={rule.id} className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">{rule.area}</span>
-                  <span className="text-muted-foreground">{rule.maxHoras}h</span>
+      {/* Grid de Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {rules.map((rule) => (
+          <Card
+            key={rule.id}
+            className={`bg-white border-l-4 ${rule.cor} shadow-sm hover:shadow-md transition-shadow`}
+          >
+            <CardContent className="p-5">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-2">
+                  <Settings className="h-4 w-4 text-slate-400" />
+                  <h3 className="font-bold text-slate-700 text-lg">
+                    {rule.area}
+                  </h3>
+                  <Badge
+                    variant="secondary"
+                    className={`${rule.bgBadge} border-0 font-medium`}
+                  >
+                    Max {rule.maxHoras}h
+                  </Badge>
                 </div>
-                <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full gradient-primary rounded-full transition-all" style={{ width: `${(rule.maxHoras / 100) * 100}%` }} />
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-slate-400 hover:text-blue-600"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-slate-400 hover:text-red-500"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                {rule.descricao}
+              </p>
+              <p className="text-xs text-slate-400">
+                Exemplos:{" "}
+                {rule.area === "Pesquisa"
+                  ? "IC, artigos, congressos"
+                  : rule.area === "Extensao"
+                    ? "Projetos sociais, voluntariado"
+                    : "Monitorias, cursos, tutoria"}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
