@@ -30,7 +30,7 @@
 | **Instituição** | SENAC                                       |
 | **Curso**       | Análise e Desenvolvimento de Sistemas (ADS) |
 | **Disciplina**  | Projeto Integrador / Desenvolvimento Web    |
-| **Semestre**    | 2025.2                                      |
+| **Semestre**    | 2026.1                                      |
 
 ---
 
