@@ -60,24 +60,29 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left panel */}
-      <div className="hidden lg:flex lg:w-1/2 gradient-hero items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-55">
+      <div className="w-full lg:w-1/2 gradient-hero flex items-center justify-center px-6 py-6 lg:py-10 lg:p-12 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-55 hidden lg:block">
           <div className="absolute top-20 left-20 w-[600px] h-[200px] rounded-full bg-primary blur-[120px]" />
           <div className="absolute bottom-20 right-20 w-[600px] h-[200px] rounded-full bg-accent blur-[150px]" />
         </div>
+
         <div className="relative z-10 text-center max-w-md">
-          <div>
-            <img src={logoSenac} alt="Logo do Senac" />
-          </div>
+          <img
+            src={logoSenac}
+            alt="Logo do Senac"
+            className="mx-auto mb-3 w-52 lg:w-auto"
+          />
+
           <h1
-            className="text-3xl font-bold text-primary-foreground mb-4"
+            className="font-bold text-[1.76rem] lg:text-3xl text-primary-foreground mb-2"
             style={{ fontFamily: "Arial" }}
           >
             Atividades Complementares
           </h1>
-          <p className="text-primary-foreground/70 text-lg">
+
+          <p className="text-primary-foreground/70 text-[0.94rem] lg:text-lg">
             Gerencie e acompanhe suas horas complementares de forma simples e
             eficiente.
           </p>
@@ -85,19 +90,21 @@ const Login = () => {
       </div>
 
       {/* Right panel */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md space-y-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-10 lg:p-8">
+        <div className="w-full max-w-md space-y-6">
           <div className="flex flex-col items-center text-center lg:text-left">
-            <div className="lg:flex inline-flex items-center justify-center w-14 h-14 rounded-xl gradient-accent mb-4">
+            <div className="hidden lg:flex items-center justify-center w-14 h-14 rounded-xl gradient-accent mb-4">
               <GraduationCap className="h-7 w-7 text-accent-foreground" />
             </div>
+
             <h2
-              className="flex flex-col items-center text-3xl font-bold text-foreground"
+              className="text-[1.76rem] lg:text-3xl font-bold text-foreground"
               style={{ fontFamily: "Arial" }}
             >
               Entrar no Sistema
             </h2>
-            <p className="flex flex-col items-center text-muted-foreground mt-1">
+
+            <p className="text-muted-foreground mt-1 text-[0.94rem]">
               Selecione seu perfil e faça login
             </p>
           </div>
@@ -111,9 +118,9 @@ const Login = () => {
               onValueChange={(value) => setSelectedRole(value as UserRole)}
             >
               <SelectTrigger
-                className={`h-11 border-2 transition-all duration-200 
-                    border-primary bg-primary/5 shadow-md 
-                    hover:border-primary/30 hover:bg-secondary`}
+                className="h-11 border-2 transition-all duration-200 
+                border-primary bg-primary/5 shadow-md 
+                hover:border-primary/30 hover:bg-secondary"
               >
                 <SelectValue placeholder="Selecione seu perfil" />
               </SelectTrigger>
@@ -124,13 +131,13 @@ const Login = () => {
                     key={role.value}
                     value={role.value}
                     className="
-                        text-black border border-transparent
-                        hover:!border-primary/40
-                        hover:!bg-primary/10
-                        hover:!text-black
-                        data-[state=checked]:!bg-white
-                        data-[state=checked]:!text-black
-                      "
+                      text-black border border-transparent
+                      hover:!border-primary/40
+                      hover:!bg-primary/10
+                      hover:!text-black
+                      data-[state=checked]:!bg-white
+                      data-[state=checked]:!text-black
+                    "
                   >
                     <div className="flex items-center gap-2">
                       {role.icon}
@@ -142,7 +149,7 @@ const Login = () => {
             </Select>
           </div>
 
-          <p className="text-xs text-center text-muted-foreground bg-secondary rounded-lg p-3">
+          <p className="text-[0.82rem] text-center text-muted-foreground bg-secondary rounded-lg p-3">
             {roles.find((r) => r.value === selectedRole)?.desc}
           </p>
 
@@ -158,6 +165,7 @@ const Login = () => {
                 required
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
               <Input
@@ -169,6 +177,7 @@ const Login = () => {
                 required
               />
             </div>
+
             <Button
               type="submit"
               className="w-full gradient-primary text-white h-12 text-base font-semibold transition-all duration-300 hover:opacity-90 active:scale-[0.98]"
@@ -176,10 +185,11 @@ const Login = () => {
               <LogIn className="mr-2 h-5 w-5" />
               Entrar como {roles.find((r) => r.value === selectedRole)?.label}
             </Button>
+
             <p className="text-center mt-4">
               <a
                 href="/forgot-password"
-                className="text-xs text-black hover:underline inline-block"
+                className="text-[0.82rem] text-black hover:underline inline-block"
               >
                 Esqueci a senha
               </a>
