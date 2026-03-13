@@ -61,11 +61,14 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
+
       {/* Left panel */}
       <div className="w-full lg:w-1/2 gradient-hero flex items-center justify-center px-6 py-6 lg:py-10 lg:p-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-55 hidden lg:block">
-          <div className="absolute top-20 left-20 w-[600px] h-[200px] rounded-full bg-primary blur-[120px]" />
-          <div className="absolute bottom-20 right-20 w-[600px] h-[200px] rounded-full bg-accent blur-[150px]" />
+
+        {/* efeitos visuais azul + laranja em mobile e desktop */}
+        <div className="absolute inset-0 opacity-55">
+          <div className="absolute top-10 left-10 w-[320px] h-[140px] lg:w-[600px] lg:h-[200px] rounded-full bg-primary blur-[100px] lg:blur-[120px]" />
+          <div className="absolute bottom-10 right-10 w-[320px] h-[140px] lg:w-[600px] lg:h-[200px] rounded-full bg-accent blur-[120px] lg:blur-[150px]" />
         </div>
 
         <div className="relative z-10 text-center max-w-md">
@@ -92,7 +95,10 @@ const Login = () => {
       {/* Right panel */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-10 lg:p-8">
         <div className="w-full max-w-md space-y-6">
+
           <div className="flex flex-col items-center text-center lg:text-left">
+
+            {/* Ícone escondido no mobile */}
             <div className="hidden lg:flex items-center justify-center w-14 h-14 rounded-xl gradient-accent mb-4">
               <GraduationCap className="h-7 w-7 text-accent-foreground" />
             </div>
@@ -154,6 +160,7 @@ const Login = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input
@@ -194,6 +201,7 @@ const Login = () => {
                 Esqueci a senha
               </a>
             </p>
+
           </form>
         </div>
       </div>
