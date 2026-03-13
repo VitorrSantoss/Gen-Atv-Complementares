@@ -70,15 +70,17 @@ const CoordinatorSubmissions = () => {
   const historico = submissions.filter((s) => s.status !== "pendente");
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-start">
+    <div className="overflow-hidden flex flex-col p-8 space-y-6 bg-slate-50">
+      <div className="flex justify-between items-start flex-shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Fila de Solicitações </h1>
+          <h1 className="text-3xl font-bold text-slate-800">
+            Submissão de Atividades
+          </h1>
           <p className="text-lg text-slate-500">
-            Avalie as solicitações enviadas pelos alunos
+            Avalie as atividades submetidas pelos alunos
           </p>
         </div>
-        </div>
+      </div>
 
       {/* PENDENTES SECTION */}
       <Card className="border-0 shadow-sm rounded-2xl bg-white overflow-hidden">
