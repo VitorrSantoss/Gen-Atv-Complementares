@@ -1,6 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Users, GraduationCap, Clock } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
 
 const stats = [
   { label: "Cursos Ativos", value: 12, icon: BookOpen, color: "gradient-primary" },
@@ -33,22 +45,37 @@ const COLORS = [
 
 const AdminDashboard = () => {
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'Plus Jakarta Sans' }}>Dashboard Administrativo</h1>
-        <p className="text-muted-foreground mt-1">Visão geral do sistema de atividades complementares</p>
+    <div className="p-8 space-y-6 bg-slate-50">
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">
+            Dashboard Administrativo
+          </h1>
+          <p className="text-lg text-slate-500">
+            Visão geral do sistema de atividades complementares
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <Card key={stat.label} className="glass-card border-0">
+          <Card 
+            key={stat.label} 
+            className="glass-card border-0 shadow-sm rounded-2xl overflow-hidden"
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className="text-3xl font-bold text-foreground mt-1">{stat.value}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    {stat.label}
+                  </p>
+                  <p className="text-3xl font-black text-slate-800 mt-1">
+                    {stat.value}
+                  </p>
                 </div>
-                <div className={`w-12 h-12 rounded-xl ${stat.color} flex items-center justify-center`}>
+                <div 
+                  className={`w-12 h-12 rounded-2xl ${stat.color} flex items-center justify-center shadow-lg`}
+                >
                   <stat.icon className="h-6 w-6 text-primary-foreground" />
                 </div>
               </div>
@@ -58,39 +85,90 @@ const AdminDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="glass-card border-0 lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-lg">Solicitações por Curso</CardTitle>
+        <Card className="glass-card border-0 shadow-sm rounded-2xl lg:col-span-2">
+          <CardHeader className="border-b border-slate-50/50 p-6">
+            <CardTitle className="text-lg font-bold text-slate-800">
+              Solicitações por Curso
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 90%)" />
-                <XAxis dataKey="curso" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="aprovadas" fill="hsl(215, 90%, 50%)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="pendentes" fill="hsl(25, 95%, 55%)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="rejeitadas" fill="hsl(0, 84%, 60%)" radius={[4, 4, 0, 0]} />
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  vertical={false} 
+                  stroke="hsl(215, 20%, 90%)" 
+                />
+                <XAxis 
+                  dataKey="curso" 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: "#64748b", fontWeight: 600 }}
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: "#64748b", fontWeight: 600 }}
+                />
+                <Tooltip 
+                  cursor={{ fill: "rgba(241, 245, 249, 0.4)" }}
+                  contentStyle={{
+                    borderRadius: "12px",
+                    border: "none",
+                    boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                  }}
+                />
+                <Bar dataKey="aprovadas" fill="hsl(215, 90%, 50%)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="pendentes" fill="hsl(25, 95%, 55%)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="rejeitadas" fill="hsl(0, 84%, 60%)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-0">
-          <CardHeader>
-            <CardTitle className="text-lg">Distribuição por Área</CardTitle>
+        <Card className="glass-card border-0 shadow-sm rounded-2xl">
+          <CardHeader className="border-b border-slate-50/50 p-6">
+            <CardTitle className="text-lg font-bold text-slate-800">
+              Distribuição por Área
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={4} dataKey="value">
+                <Pie 
+                  data={pieData} 
+                  cx="50%" 
+                  cy="50%" 
+                  innerRadius={70} 
+                  outerRadius={90} 
+                  paddingAngle={8} 
+                  dataKey="value"
+                >
                   {pieData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={COLORS[index % COLORS.length]} 
+                      stroke="none"
+                    />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend />
+                <Tooltip 
+                  contentStyle={{
+                    borderRadius: "12px",
+                    border: "none",
+                    boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                  }}
+                />
+                <Legend 
+                  verticalAlign="bottom"
+                  iconType="circle"
+                  wrapperStyle={{
+                    paddingTop: "20px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
