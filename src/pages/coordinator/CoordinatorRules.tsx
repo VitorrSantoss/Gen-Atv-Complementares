@@ -13,7 +13,17 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-const initialRules = [
+// 1. Interface adicionada para tipar corretamente os dados no TypeScript
+interface Rule {
+  id: string;
+  area: string;
+  maxHoras: number;
+  descricao: string;
+  cor: string;
+  bgBadge: string;
+}
+
+const initialRules: Rule[] = [
   {
     id: "1",
     area: "Pesquisa",
@@ -60,15 +70,28 @@ const initialRules = [
   },
 ];
 
+// 2. Array com as paletas de cores para sortear
+const colorPalettes = [
+  { cor: "border-blue-400", bgBadge: "bg-blue-100 text-blue-700" },
+  { cor: "border-emerald-400", bgBadge: "bg-emerald-100 text-emerald-700" },
+  { cor: "border-purple-400", bgBadge: "bg-purple-100 text-purple-700" },
+  { cor: "border-orange-400", bgBadge: "bg-orange-100 text-orange-700" },
+  { cor: "border-pink-400", bgBadge: "bg-pink-100 text-pink-700" },
+  { cor: "border-cyan-400", bgBadge: "bg-cyan-100 text-cyan-700" },
+  { cor: "border-rose-400", bgBadge: "bg-rose-100 text-rose-700" },
+];
+
 const CoordinatorRules = () => {
-  const [rules, setRules] = useState(initialRules);
+  // Tipando o estado rules com a interface Rule[]
+  const [rules, setRules] = useState<Rule[]>(initialRules);
   const totalMax = rules.reduce((acc, r) => acc + r.maxHoras, 0);
 
   // Estados dos Modais
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [ruleToDelete, setRuleToDelete] = useState<any>(null);
+  // Tipando o state de exclusão para não usar "any"
+  const [ruleToDelete, setRuleToDelete] = useState<Rule | null>(null);
 
   const [formData, setFormData] = useState({
     id: "",
@@ -91,7 +114,7 @@ const CoordinatorRules = () => {
     setDialogOpen(true);
   };
 
-  const handleOpenEdit = (rule: any) => {
+  const handleOpenEdit = (rule: Rule) => {
     setIsEditing(true);
     setFormData({
       id: rule.id,
@@ -104,7 +127,8 @@ const CoordinatorRules = () => {
 
   const handleSave = () => {
     const ruleData = {
-      ...formData,
+      area: formData.area,
+      descricao: formData.descricao,
       maxHoras: Number(formData.maxHoras) || 0,
     };
 
@@ -113,11 +137,14 @@ const CoordinatorRules = () => {
         rules.map((r) => (r.id === formData.id ? { ...r, ...ruleData } : r))
       );
     } else {
-      const newRule = {
+      // 3. Sorteia uma cor aleatória do array de paletas
+      const randomPalette = colorPalettes[Math.floor(Math.random() * colorPalettes.length)];
+
+      const newRule: Rule = {
         ...ruleData,
         id: Math.random().toString(36).substring(2, 9),
-        cor: "border-slate-400",
-        bgBadge: "bg-slate-100 text-slate-700",
+        cor: randomPalette.cor,
+        bgBadge: randomPalette.bgBadge,
       };
       setRules([...rules, newRule]);
     }
@@ -125,7 +152,7 @@ const CoordinatorRules = () => {
     setDialogOpen(false);
   };
 
-  const handleDeleteClick = (rule: any) => {
+  const handleDeleteClick = (rule: Rule) => {
     setRuleToDelete(rule);
     setDeleteDialogOpen(true);
   };
