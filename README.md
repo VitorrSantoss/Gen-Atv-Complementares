@@ -271,12 +271,14 @@ Este projeto foi desenvolvido com dedicação pela equipe acadêmica:
 
 <div align="center">
 
-| Integrantes     |
-| --------------- |
-| Renan Souza     |
-| Vitória Barbosa |
-| Jorge Figueredo |
-| Vitor Santos    |
+| Integrantes      |
+| ---------------- |
+| Renan Souza      |
+| Vitória Barbosa  |
+| Antonio Vinícius |
+| Lucas Vinícius   |
+| Jorge Figueredo  |
+| Vitor Santos     |
 
 </div>
 
