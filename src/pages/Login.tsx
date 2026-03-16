@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logoSenac from "@/assets/logo_senac_branca.png";
+import { Link } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -61,10 +62,8 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
-
       {/* Left panel */}
       <div className="w-full lg:w-1/2 gradient-hero flex items-center justify-center px-6 py-6 lg:py-10 lg:p-12 relative overflow-hidden">
-
         {/* efeitos visuais azul + laranja em mobile e desktop */}
         <div className="absolute inset-0 opacity-55">
           <div className="absolute top-10 left-10 w-[320px] h-[140px] lg:w-[600px] lg:h-[200px] rounded-full bg-primary blur-[100px] lg:blur-[120px]" />
@@ -95,9 +94,7 @@ const Login = () => {
       {/* Right panel */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-10 lg:p-8">
         <div className="w-full max-w-md space-y-6">
-
           <div className="flex flex-col items-center text-center lg:text-left">
-
             {/* Ícone escondido no mobile */}
             <div className="hidden lg:flex items-center justify-center w-14 h-14 rounded-xl gradient-accent mb-4">
               <GraduationCap className="h-7 w-7 text-accent-foreground" />
@@ -160,7 +157,6 @@ const Login = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input
@@ -192,16 +188,14 @@ const Login = () => {
               <LogIn className="mr-2 h-5 w-5" />
               Entrar como {roles.find((r) => r.value === selectedRole)?.label}
             </Button>
-
             <p className="text-center mt-4">
-              <a
-                href="/forgot-password"
+              <Link
+                to="/esqueci-senha"
                 className="text-[0.82rem] text-black hover:underline inline-block"
               >
                 Esqueci a senha
-              </a>
+              </Link>
             </p>
-
           </form>
         </div>
       </div>
