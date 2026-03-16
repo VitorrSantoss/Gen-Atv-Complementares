@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 import Login from "./pages/Login";
+import EsqueciSenha from "./pages/EsqueciSenha";
 import NotFound from "./pages/NotFound";
 
 import AdminLayout from "./components/layout/AdminLayout";
@@ -26,10 +27,18 @@ import StudentNotifications from "./pages/student/StudentNotifications";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: string[] }) => {
+const ProtectedRoute = ({
+  children,
+  allowedRoles,
+}: {
+  children: React.ReactNode;
+  allowedRoles: string[];
+}) => {
   const { user, isAuthenticated } = useAuth();
+
   if (!isAuthenticated) return <Navigate to="/" replace />;
   if (!allowedRoles.includes(user!.role)) return <Navigate to="/" replace />;
+
   return <>{children}</>;
 };
 
@@ -38,22 +47,63 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/" element={isAuthenticated ? <Navigate to={user!.role === "superadmin" ? "/admin" : user!.role === "coordenador" ? "/coordenador" : "/aluno"} replace /> : <Login />} />
-      
-      <Route path="/admin" element={<ProtectedRoute allowedRoles={["superadmin"]}><AdminLayout /></ProtectedRoute>}>
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? (
+            <Navigate
+              to={
+                user!.role === "superadmin"
+                  ? "/admin"
+                  : user!.role === "coordenador"
+                  ? "/coordenador"
+                  : "/aluno"
+              }
+              replace
+            />
+          ) : (
+            <Login />
+          )
+        }
+      />
+
+      <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRoles={["superadmin"]}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<AdminDashboard />} />
         <Route path="cursos" element={<AdminCourses />} />
         <Route path="coordenadores" element={<AdminCoordinators />} />
       </Route>
 
-      <Route path="/coordenador" element={<ProtectedRoute allowedRoles={["coordenador"]}><CoordinatorLayout /></ProtectedRoute>}>
+      <Route
+        path="/coordenador"
+        element={
+          <ProtectedRoute allowedRoles={["coordenador"]}>
+            <CoordinatorLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<CoordinatorDashboard />} />
         <Route path="alunos" element={<CoordinatorStudents />} />
         <Route path="regras" element={<CoordinatorRules />} />
         <Route path="solicitacoes" element={<CoordinatorSubmissions />} />
       </Route>
 
-      <Route path="/aluno" element={<ProtectedRoute allowedRoles={["aluno"]}><StudentLayout /></ProtectedRoute>}>
+      <Route
+        path="/aluno"
+        element={
+          <ProtectedRoute allowedRoles={["aluno"]}>
+            <StudentLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<StudentDashboard />} />
         <Route path="submissao" element={<StudentSubmission />} />
         <Route path="notificacoes" element={<StudentNotifications />} />
