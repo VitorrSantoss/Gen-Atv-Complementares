@@ -8,7 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -66,10 +66,22 @@ const initialCoordinators = [
 ];
 
 const AdminCoordinators = () => {
-  const [coordinators] = useState(initialCoordinators);
+  const [coordinators, setCoordinators] = useState(initialCoordinators);
   const [search, setSearch] = useState("");
+  
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
+  
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [coordinatorToDelete, setCoordinatorToDelete] = useState<any>(null);
+
+  const [formData, setFormData] = useState({
+    id: "",
+    name: "",
+    email: "",
+    status: "ativo",
+  });
 
   const filtered = coordinators.filter((c) => {
     if (!search) return true;
@@ -94,42 +106,103 @@ const AdminCoordinators = () => {
 
   const handleOpenChange = (open: boolean) => {
     setDialogOpen(open);
-    if (!open) setSelectedCourses([]);
+    if (!open) {
+      setSelectedCourses([]);
+      setFormData({ id: "", name: "", email: "", status: "ativo" });
+      setIsEditing(false);
+    }
+  };
+
+  const handleOpenAdd = () => {
+    setIsEditing(false);
+    setFormData({ id: "", name: "", email: "", status: "ativo" });
+    setSelectedCourses([]);
+    setDialogOpen(true);
+  };
+
+  const handleOpenEdit = (coord: any) => {
+    setIsEditing(true);
+    setFormData({
+      id: coord.id,
+      name: coord.name,
+      email: coord.email,
+      status: coord.status,
+    });
+    setSelectedCourses([...coord.courses]);
+    setDialogOpen(true);
+  };
+
+  const handleSave = () => {
+    const coordData = {
+      ...formData,
+      courses: selectedCourses,
+    };
+
+    if (isEditing) {
+      setCoordinators(
+        coordinators.map((c) => (c.id === formData.id ? { ...c, ...coordData } : c))
+      );
+    } else {
+      const newCoord = {
+        ...coordData,
+        id: Math.random().toString(36).substring(2, 9),
+      };
+      setCoordinators([...coordinators, newCoord]);
+    }
+    
+    setDialogOpen(false);
+  };
+
+  const handleDeleteClick = (coord: any) => {
+    setCoordinatorToDelete(coord);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (coordinatorToDelete) {
+      setCoordinators(coordinators.filter((c) => c.id !== coordinatorToDelete.id));
+      setDeleteDialogOpen(false);
+      setCoordinatorToDelete(null);
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 space-y-6 bg-slate-50">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1
-            className="text-3xl font-bold text-foreground"
-            style={{ fontFamily: "Plus Jakarta Sans" }}
-          >
+          <h1 className="text-3xl font-bold text-slate-800">
             Gestão de Coordenadores
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-lg text-slate-500 mt-1">
             Cadastre e associe coordenadores aos cursos
           </p>
         </div>
 
-        <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
-          <DialogTrigger asChild>
-            <Button className="gradient-primary text-primary-foreground">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Coordenador
-            </Button>
-          </DialogTrigger>
+        <Button 
+          className="gradient-primary text-primary-foreground"
+          onClick={handleOpenAdd}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Coordenador
+        </Button>
 
+        <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
           <DialogContent className="sm:max-w-[550px]">
             <DialogHeader>
-              <DialogTitle>Cadastrar Coordenador</DialogTitle>
+              <DialogTitle>
+                {isEditing ? "Editar Coordenador" : "Cadastrar Coordenador"}
+              </DialogTitle>
             </DialogHeader>
 
-            {/* 🔧 CORREÇÃO AQUI: px-2 evita cortar o focus ring */}
             <div className="space-y-4 py-2 px-2 max-h-[70vh] overflow-y-auto">
               <div className="space-y-2">
                 <Label htmlFor="nome">Nome Completo</Label>
-                <Input id="nome" placeholder="Ex: Prof. Maria Silva" />
+                <Input 
+                  id="nome" 
+                  placeholder="Ex: Prof. Maria Silva" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
               </div>
 
               <div className="space-y-2">
@@ -138,6 +211,8 @@ const AdminCoordinators = () => {
                   id="email"
                   type="email"
                   placeholder="email@universidade.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
 
@@ -175,7 +250,7 @@ const AdminCoordinators = () => {
             <div className="pt-2">
               <Button
                 className="w-full gradient-primary text-primary-foreground"
-                onClick={() => setDialogOpen(false)}
+                onClick={handleSave}
               >
                 Salvar Coordenador
               </Button>
@@ -184,8 +259,8 @@ const AdminCoordinators = () => {
         </Dialog>
       </div>
 
-      <Card className="glass-card border-0">
-        <CardHeader className="pb-2">
+      <Card className="glass-card border-0 shadow-sm rounded-2xl">
+        <CardHeader className="border-b border-slate-50/50 p-6">
           <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
 
@@ -198,7 +273,7 @@ const AdminCoordinators = () => {
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-6">
           <Table>
             <TableHeader>
               <TableRow>
@@ -254,6 +329,7 @@ const AdminCoordinators = () => {
                         variant="ghost"
                         size="icon"
                         className="hover:text-primary"
+                        onClick={() => handleOpenEdit(coord)}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -262,6 +338,7 @@ const AdminCoordinators = () => {
                         variant="ghost"
                         size="icon"
                         className="hover:text-destructive"
+                        onClick={() => handleDeleteClick(coord)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -273,6 +350,29 @@ const AdminCoordinators = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Excluir Coordenador</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-slate-600">
+            Tem certeza que deseja remover o(a) coordenador(a){" "}
+            <strong>{coordinatorToDelete?.name}</strong>?
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button className="bg-red-600 text-white hover:bg-red-700" onClick={confirmDelete}>
+              Confirmar Exclusão
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

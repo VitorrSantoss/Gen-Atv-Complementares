@@ -8,7 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -82,12 +82,23 @@ const initialCourses = [
 ];
 
 const AdminCourses = () => {
-  const [courses] = useState(initialCourses);
+  const [courses, setCourses] = useState(initialCourses);
   const [search, setSearch] = useState("");
+  
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedCoordinators, setSelectedCoordinators] = useState<string[]>(
-    [],
-  );
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedCoordinators, setSelectedCoordinators] = useState<string[]>([]);
+  
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<any>(null);
+  
+  const [formData, setFormData] = useState({
+    id: "",
+    name: "",
+    code: "",
+    students: "",
+    status: "ativo",
+  });
 
   const filtered = courses.filter((c) => {
     if (!search) return true;
@@ -118,48 +129,117 @@ const AdminCourses = () => {
 
   const handleOpenChange = (open: boolean) => {
     setDialogOpen(open);
-    if (!open) setSelectedCoordinators([]);
+    if (!open) {
+      setSelectedCoordinators([]);
+      setFormData({ id: "", name: "", code: "", students: "", status: "ativo" });
+      setIsEditing(false);
+    }
+  };
+
+  const handleOpenAdd = () => {
+    setIsEditing(false);
+    setFormData({ id: "", name: "", code: "", students: "", status: "ativo" });
+    setSelectedCoordinators([]);
+    setDialogOpen(true);
+  };
+
+  const handleOpenEdit = (course: any) => {
+    setIsEditing(true);
+    setFormData({
+      id: course.id,
+      name: course.name,
+      code: course.code,
+      students: course.students.toString(),
+      status: course.status,
+    });
+    setSelectedCoordinators([...course.coordinators]);
+    setDialogOpen(true);
+  };
+
+  const handleSave = () => {
+    const courseData = {
+      ...formData,
+      students: Number(formData.students) || 0,
+      coordinators: selectedCoordinators,
+    };
+
+    if (isEditing) {
+      setCourses(
+        courses.map((c) => (c.id === formData.id ? { ...c, ...courseData } : c))
+      );
+    } else {
+      const newCourse = {
+        ...courseData,
+        id: Math.random().toString(36).substring(2, 9),
+      };
+      setCourses([...courses, newCourse]);
+    }
+    
+    setDialogOpen(false);
+  };
+
+  const handleDeleteClick = (course: any) => {
+    setCourseToDelete(course);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (courseToDelete) {
+      setCourses(courses.filter((c) => c.id !== courseToDelete.id));
+      setDeleteDialogOpen(false);
+      setCourseToDelete(null);
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 space-y-6 bg-slate-50">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1
-            className="text-3xl font-bold text-foreground"
-            style={{ fontFamily: "Plus Jakarta Sans" }}
-          >
+          <h1 className="text-3xl font-bold text-slate-800">
             Gestão de Cursos
           </h1>
 
-          <p className="text-muted-foreground mt-1">
+          <p className="text-lg text-slate-500 mt-1">
             Cadastre e gerencie os cursos da instituição
           </p>
         </div>
 
-        <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
-          <DialogTrigger asChild>
-            <Button className="gradient-primary text-primary-foreground">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Curso
-            </Button>
-          </DialogTrigger>
+        <Button 
+          className="gradient-primary text-primary-foreground"
+          onClick={handleOpenAdd}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Curso
+        </Button>
 
+        <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
           <DialogContent className="sm:max-w-[550px]">
             <DialogHeader>
-              <DialogTitle>Cadastrar Curso</DialogTitle>
+              <DialogTitle>
+                {isEditing ? "Editar Curso" : "Cadastrar Curso"}
+              </DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4 py-2 px-2 max-h-[70vh] overflow-y-auto">
               <div className="space-y-2">
                 <Label htmlFor="nome">Nome do Curso</Label>
-                <Input id="nome" placeholder="Ex: Engenharia de Software" />
+                <Input 
+                  id="nome" 
+                  placeholder="Ex: Engenharia de Software" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="codigo">Código</Label>
-                  <Input id="codigo" placeholder="Ex: ES" />
+                  <Input 
+                    id="codigo" 
+                    placeholder="Ex: ES" 
+                    value={formData.code}
+                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -169,6 +249,8 @@ const AdminCourses = () => {
                     type="number"
                     placeholder="Ex: 100"
                     min="0"
+                    value={formData.students}
+                    onChange={(e) => setFormData({ ...formData, students: e.target.value })}
                   />
                 </div>
               </div>
@@ -176,7 +258,10 @@ const AdminCourses = () => {
               <div className="space-y-2">
                 <Label htmlFor="status">Status do Curso</Label>
 
-                <Select defaultValue="ativo">
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                >
                   <SelectTrigger id="status">
                     <SelectValue placeholder="Selecione o status" />
                   </SelectTrigger>
@@ -216,7 +301,7 @@ const AdminCourses = () => {
             <div className="pt-2">
               <Button
                 className="w-full gradient-primary text-primary-foreground"
-                onClick={() => setDialogOpen(false)}
+                onClick={handleSave}
               >
                 Salvar Curso
               </Button>
@@ -225,8 +310,8 @@ const AdminCourses = () => {
         </Dialog>
       </div>
 
-      <Card className="glass-card border-0">
-        <CardHeader className="pb-2">
+      <Card className="glass-card border-0 shadow-sm rounded-2xl">
+        <CardHeader className="border-b border-slate-50/50 p-6">
           <div className="flex items-center w-full max-w-md h-10 rounded-md border border-input bg-background px-3 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-colors">
             <Search className="h-4 w-4 text-muted-foreground shrink-0" />
 
@@ -240,7 +325,7 @@ const AdminCourses = () => {
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-6">
           <Table>
             <TableHeader>
               <TableRow>
@@ -297,6 +382,7 @@ const AdminCourses = () => {
                         variant="ghost"
                         size="icon"
                         className="hover:text-primary"
+                        onClick={() => handleOpenEdit(course)}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -305,6 +391,7 @@ const AdminCourses = () => {
                         variant="ghost"
                         size="icon"
                         className="hover:text-destructive"
+                        onClick={() => handleDeleteClick(course)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -316,6 +403,29 @@ const AdminCourses = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Excluir Curso</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-slate-600">
+            Tem certeza que deseja remover o curso{" "}
+            <strong>{courseToDelete?.name}</strong>?
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button className="bg-red-600 text-white hover:bg-red-700" onClick={confirmDelete}>
+              Confirmar Exclusão
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

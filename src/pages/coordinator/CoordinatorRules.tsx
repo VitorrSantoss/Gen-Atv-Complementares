@@ -1,10 +1,29 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Info, Settings } from "lucide-react";
+import { Plus, Pencil, Trash2, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
-const initialRules = [
+// 1. Interface adicionada para tipar corretamente os dados no TypeScript
+interface Rule {
+  id: string;
+  area: string;
+  maxHoras: number;
+  descricao: string;
+  cor: string;
+  bgBadge: string;
+}
+
+const initialRules: Rule[] = [
   {
     id: "1",
     area: "Pesquisa",
@@ -51,13 +70,103 @@ const initialRules = [
   },
 ];
 
+// 2. Array com as paletas de cores para sortear
+const colorPalettes = [
+  { cor: "border-blue-400", bgBadge: "bg-blue-100 text-blue-700" },
+  { cor: "border-emerald-400", bgBadge: "bg-emerald-100 text-emerald-700" },
+  { cor: "border-purple-400", bgBadge: "bg-purple-100 text-purple-700" },
+  { cor: "border-orange-400", bgBadge: "bg-orange-100 text-orange-700" },
+  { cor: "border-pink-400", bgBadge: "bg-pink-100 text-pink-700" },
+  { cor: "border-cyan-400", bgBadge: "bg-cyan-100 text-cyan-700" },
+  { cor: "border-rose-400", bgBadge: "bg-rose-100 text-rose-700" },
+];
+
 const CoordinatorRules = () => {
-  const [rules] = useState(initialRules);
+  // Tipando o estado rules com a interface Rule[]
+  const [rules, setRules] = useState<Rule[]>(initialRules);
   const totalMax = rules.reduce((acc, r) => acc + r.maxHoras, 0);
+
+  // Estados dos Modais
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  // Tipando o state de exclusão para não usar "any"
+  const [ruleToDelete, setRuleToDelete] = useState<Rule | null>(null);
+
+  const [formData, setFormData] = useState({
+    id: "",
+    area: "",
+    maxHoras: "",
+    descricao: "",
+  });
+
+  const handleOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setFormData({ id: "", area: "", maxHoras: "", descricao: "" });
+      setIsEditing(false);
+    }
+  };
+
+  const handleOpenAdd = () => {
+    setIsEditing(false);
+    setFormData({ id: "", area: "", maxHoras: "", descricao: "" });
+    setDialogOpen(true);
+  };
+
+  const handleOpenEdit = (rule: Rule) => {
+    setIsEditing(true);
+    setFormData({
+      id: rule.id,
+      area: rule.area,
+      maxHoras: rule.maxHoras.toString(),
+      descricao: rule.descricao,
+    });
+    setDialogOpen(true);
+  };
+
+  const handleSave = () => {
+    const ruleData = {
+      area: formData.area,
+      descricao: formData.descricao,
+      maxHoras: Number(formData.maxHoras) || 0,
+    };
+
+    if (isEditing) {
+      setRules(
+        rules.map((r) => (r.id === formData.id ? { ...r, ...ruleData } : r))
+      );
+    } else {
+      // 3. Sorteia uma cor aleatória do array de paletas
+      const randomPalette = colorPalettes[Math.floor(Math.random() * colorPalettes.length)];
+
+      const newRule: Rule = {
+        ...ruleData,
+        id: Math.random().toString(36).substring(2, 9),
+        cor: randomPalette.cor,
+        bgBadge: randomPalette.bgBadge,
+      };
+      setRules([...rules, newRule]);
+    }
+
+    setDialogOpen(false);
+  };
+
+  const handleDeleteClick = (rule: Rule) => {
+    setRuleToDelete(rule);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (ruleToDelete) {
+      setRules(rules.filter((r) => r.id !== ruleToDelete.id));
+      setDeleteDialogOpen(false);
+      setRuleToDelete(null);
+    }
+  };
 
   return (
     <div className="p-8 space-y-6 bg-slate-50 ">
-      {/* Header */}
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Regras</h1>
@@ -65,12 +174,14 @@ const CoordinatorRules = () => {
             Configure os limites de horas por area de atividade
           </p>
         </div>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6">
-              <Plus className="h-4 w-4 mr-2" /> Nova Regra
-            </Button>
+        <Button 
+          className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6"
+          onClick={handleOpenAdd}
+        >
+          <Plus className="h-4 w-4 mr-2" /> Nova Regra
+        </Button>
       </div>
 
-      {/* Info Alert */}
       <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
         <div className="bg-white p-1 rounded-full shadow-sm">
           <Info className="h-5 w-5 text-blue-600" />
@@ -88,7 +199,6 @@ const CoordinatorRules = () => {
         </div>
       </div>
 
-      {/* Grid de Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {rules.map((rule) => (
           <Card
@@ -98,7 +208,6 @@ const CoordinatorRules = () => {
             <CardContent className="p-5">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-2">
-                  <Settings className="h-4 w-4 text-slate-400" />
                   <h3 className="font-bold text-slate-700 text-lg">
                     {rule.area}
                   </h3>
@@ -114,6 +223,7 @@ const CoordinatorRules = () => {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-slate-400 hover:text-blue-600"
+                    onClick={() => handleOpenEdit(rule)}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -121,6 +231,7 @@ const CoordinatorRules = () => {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-slate-400 hover:text-red-500"
+                    onClick={() => handleDeleteClick(rule)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -141,6 +252,87 @@ const CoordinatorRules = () => {
           </Card>
         ))}
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {isEditing ? "Editar Regra" : "Nova Regra"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="area" className="text-right">
+                Área
+              </Label>
+              <Input
+                id="area"
+                placeholder="Ex: Extensão"
+                className="col-span-3"
+                value={formData.area}
+                onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="maxHoras" className="text-right">
+                Máx. Horas
+              </Label>
+              <Input
+                id="maxHoras"
+                type="number"
+                placeholder="Ex: 40"
+                className="col-span-3"
+                value={formData.maxHoras}
+                onChange={(e) => setFormData({ ...formData, maxHoras: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="descricao" className="text-right mt-3">
+                Descrição
+              </Label>
+              <textarea
+                id="descricao"
+                placeholder="Descrição das atividades aceitas nesta área..."
+                className="col-span-3 flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                value={formData.descricao}
+                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto" onClick={handleSave}>
+              Salvar Regra
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Excluir Regra</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-slate-600">
+            Tem certeza que deseja remover a regra para a área de{" "}
+            <strong>{ruleToDelete?.area}</strong>?
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button className="bg-red-600 text-white hover:bg-red-700" onClick={confirmDelete}>
+              Confirmar Exclusão
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
