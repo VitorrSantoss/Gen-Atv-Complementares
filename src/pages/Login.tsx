@@ -1,70 +1,35 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth, type UserRole } from "@/contexts/AuthContext";
-import { GraduationCap, Shield, Users, LogIn } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Mail, Send, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logoSenac from "@/assets/logo_senac_branca.png";
-import { Link } from "react-router-dom";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
-const roles: {
-  value: UserRole;
-  label: string;
-  icon: React.ReactNode;
-  desc: string;
-}[] = [
-  {
-    value: "aluno",
-    label: "Aluno",
-    icon: <GraduationCap className="h-6 w-6" />,
-    desc: "Submeta certificados e acompanhe suas horas",
-  },
-  {
-    value: "coordenador",
-    label: "Coordenador",
-    icon: <Users className="h-6 w-6" />,
-    desc: "Gerencie alunos e valide atividades",
-  },
-  {
-    value: "superadmin",
-    label: "Gestor",
-    icon: <Shield className="h-6 w-6" />,
-    desc: "Administre cursos e coordenadores",
-  },
-];
-
-const roleRedirects: Record<UserRole, string> = {
-  superadmin: "/admin",
-  coordenador: "/coordenador",
-  aluno: "/aluno",
-};
-
-const Login = () => {
-  const [selectedRole, setSelectedRole] = useState<UserRole>("aluno");
+const EsqueciSenha = () => {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [sucesso, setSucesso] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(email, password, selectedRole);
-    navigate(roleRedirects[selectedRole]);
+    setLoading(true);
+
+    try {
+      // Simulação de chamada de API para bater com o tempo de transição
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      setSucesso(true);
+    } catch (error) {
+      console.error("Erro ao solicitar recuperação.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* Left panel */}
+      {/* --- PAINEL ESQUERDO: IDÊNTICO AO SEU LOGIN --- */}
       <div className="w-full lg:w-1/2 gradient-hero flex items-center justify-center px-6 py-6 lg:py-10 lg:p-12 relative overflow-hidden">
-        {/* efeitos visuais azul + laranja em mobile e desktop */}
         <div className="absolute inset-0 opacity-55">
           <div className="absolute top-10 left-10 w-[320px] h-[140px] lg:w-[600px] lg:h-[200px] rounded-full bg-primary blur-[100px] lg:blur-[120px]" />
           <div className="absolute bottom-10 right-10 w-[320px] h-[140px] lg:w-[600px] lg:h-[200px] rounded-full bg-accent blur-[120px] lg:blur-[150px]" />
@@ -91,116 +56,110 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Right panel */}
+      {/* --- PAINEL DIREITO: ESTRUTURA BASEADA NO SEU LOGIN --- */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-10 lg:p-8">
         <div className="w-full max-w-md space-y-6">
-          <div className="flex flex-col items-center text-center lg:text-left">
-            {/* Ícone escondido no mobile */}
-            <div className="hidden lg:flex items-center justify-center w-14 h-14 rounded-xl gradient-accent mb-4">
-              <GraduationCap className="h-7 w-7 text-accent-foreground" />
-            </div>
+          
+          {!sucesso ? (
+            /* --- ESTADO INICIAL: FORMULÁRIO --- */
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="flex flex-col items-center text-center lg:text-left lg:items-start">
+                <div className="hidden lg:flex items-center justify-center w-14 h-14 rounded-xl gradient-accent mb-4">
+                  <Mail className="h-7 w-7 text-accent-foreground" />
+                </div>
 
-            <h2
-              className="text-[1.76rem] lg:text-3xl font-bold text-foreground"
-              style={{ fontFamily: "Arial" }}
-            >
-              Entrar no Sistema
-            </h2>
+                <h2
+                  className="text-[1.76rem] lg:text-3xl font-bold text-foreground"
+                  style={{ fontFamily: "Arial" }}
+                >
+                  Recuperar Senha
+                </h2>
 
-            <p className="text-muted-foreground mt-1 text-[0.94rem]">
-              Selecione seu perfil e faça login
-            </p>
-          </div>
+                <p className="text-muted-foreground mt-1 text-[0.94rem]">
+                  Informe seu e-mail para receber as instruções
+                </p>
+              </div>
 
-          {/* Role selector */}
-          <div className="space-y-2">
-            <Label>Tipo de usuário</Label>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">E-mail</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="h-11"
+                  />
+                </div>
 
-            <Select
-              value={selectedRole}
-              onValueChange={(value) => setSelectedRole(value as UserRole)}
-            >
-              <SelectTrigger
-                className="h-11 border-2 transition-all duration-200 
-                border-primary bg-primary/5 shadow-md 
-                hover:border-primary/30 hover:bg-secondary"
-              >
-                <SelectValue placeholder="Selecione seu perfil" />
-              </SelectTrigger>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full gradient-primary text-white h-12 text-base font-semibold transition-all duration-300 hover:opacity-90 active:scale-[0.98]"
+                >
+                  {loading ? (
+                    "Enviando..."
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-5 w-5" />
+                      Enviar Instruções
+                    </>
+                  )}
+                </Button>
 
-              <SelectContent className="border-primary/20">
-                {roles.map((role) => (
-                  <SelectItem
-                    key={role.value}
-                    value={role.value}
-                    className="
-                      text-black border border-transparent
-                      hover:!border-primary/40
-                      hover:!bg-primary/10
-                      hover:!text-black
-                      data-[state=checked]:!bg-white
-                      data-[state=checked]:!text-black
-                    "
+                <p className="text-center mt-4">
+                  <Link
+                    to="/"
+                    className="text-[0.82rem] text-black hover:underline inline-flex items-center gap-2"
                   >
-                    <div className="flex items-center gap-2">
-                      {role.icon}
-                      {role.label}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <p className="text-[0.82rem] text-center text-muted-foreground bg-secondary rounded-lg p-3">
-            {roles.find((r) => r.value === selectedRole)?.desc}
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+                    <ArrowLeft className="h-3 w-3" />
+                    Voltar para o login
+                  </Link>
+                </p>
+              </form>
             </div>
+          ) : (
+            /* --- ESTADO DE SUCESSO: CHECK VERDE --- */
+            <div className="flex flex-col items-center text-center space-y-6 animate-in zoom-in-95 duration-500">
+              <div className="flex items-center justify-center w-20 h-20 rounded-full bg-emerald-50 border-2 border-emerald-100 shadow-sm">
+                <CheckCircle2 className="h-12 w-12 text-emerald-500 animate-bounce" />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="space-y-2">
+                <h2 
+                  className="text-2xl lg:text-3xl font-bold text-foreground"
+                  style={{ fontFamily: "Arial" }}
+                >
+                  E-mail Enviado!
+                </h2>
+                <p className="text-muted-foreground text-[0.94rem] leading-relaxed">
+                  As instruções foram enviadas para <br />
+                  <span className="font-bold text-slate-900">{email}</span>
+                </p>
+              </div>
+
+              <div className="w-full pt-4 space-y-3">
+                <Link to="/">
+                  <Button className="w-full h-12 gradient-primary text-white font-semibold">
+                    Ir para o Login
+                  </Button>
+                </Link>
+                <button 
+                  onClick={() => setSucesso(false)}
+                  className="text-[0.82rem] text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Não recebeu? Tentar novamente
+                </button>
+              </div>
             </div>
+          )}
 
-            <Button
-              type="submit"
-              className="w-full gradient-primary text-white h-12 text-base font-semibold transition-all duration-300 hover:opacity-90 active:scale-[0.98]"
-            >
-              <LogIn className="mr-2 h-5 w-5" />
-              Entrar como {roles.find((r) => r.value === selectedRole)?.label}
-            </Button>
-            <p className="text-center mt-4">
-              <Link
-                to="/esqueci-senha"
-                className="text-[0.82rem] text-black hover:underline inline-block"
-              >
-                Esqueci a senha
-              </Link>
-            </p>
-          </form>
         </div>
       </div>
     </div>
   );
 };
 
-export default Login;
+export default EsqueciSenha;
