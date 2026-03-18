@@ -85,8 +85,8 @@ const Login = () => {
           </h1>
 
           <p className="text-primary-foreground/70 text-[0.94rem] lg:text-lg">
-            Gerencie e acompanhe suas horas complementares de forma simples e
-            eficiente.
+            Gerencie e acompanhe suas horas complementares <br />
+            de forma simples e eficiente.
           </p>
         </div>
       </div>
