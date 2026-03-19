@@ -23,7 +23,6 @@ const EsqueciSenha = () => {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
-
       {/* LEFT */}
       <div className="w-full lg:w-1/2 gradient-hero flex items-center justify-center p-12">
         <div className="text-center">
@@ -37,13 +36,11 @@ const EsqueciSenha = () => {
       {/* RIGHT */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-6">
-
           <h2 className="text-2xl font-bold text-center">
             Esqueci minha senha
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-
             <div>
               <Label>E-mail</Label>
               <Input
@@ -72,7 +69,6 @@ const EsqueciSenha = () => {
                 Voltar para login
               </Link>
             </div>
-
           </form>
         </div>
       </div>
