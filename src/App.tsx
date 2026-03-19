@@ -67,7 +67,16 @@ const AppRoutes = () => {
         }
       />
 
-      <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+      <Route
+        path="/esqueci-senha"
+        element={
+          isAuthenticated ? (
+            <Navigate to="/" replace />
+          ) : (
+            <EsqueciSenha />
+          )
+        }
+      />
 
       <Route
         path="/admin"
