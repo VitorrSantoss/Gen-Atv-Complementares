@@ -77,7 +77,6 @@ const Login = () => {
       {/* Right */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
-
           <div>
             <h2 className="text-2xl font-bold">Entrar no Sistema</h2>
             <p className="text-muted-foreground">
@@ -123,11 +122,11 @@ const Login = () => {
 
           {/* FORM */}
           <form onSubmit={handleSubmit} className="space-y-4">
-
             <div>
               <Label>E-mail</Label>
               <Input
                 type="email"
+                placeholder="Digite seu email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -138,6 +137,7 @@ const Login = () => {
               <Label>Senha</Label>
               <Input
                 type="password"
+                placeholder="••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -156,7 +156,7 @@ const Login = () => {
 
             <Button type="submit" className="w-full">
               <LogIn className="mr-2 h-5 w-5" />
-              Entrar como {roles.find(r => r.value === selectedRole)?.label}
+              Entrar como {roles.find((r) => r.value === selectedRole)?.label}
             </Button>
           </form>
         </div>
