@@ -56,8 +56,8 @@ const AppRoutes = () => {
                 user!.role === "superadmin"
                   ? "/admin"
                   : user!.role === "coordenador"
-                  ? "/coordenador"
-                  : "/aluno"
+                    ? "/coordenador"
+                    : "/aluno"
               }
               replace
             />
@@ -70,11 +70,7 @@ const AppRoutes = () => {
       <Route
         path="/esqueci-senha"
         element={
-          isAuthenticated ? (
-            <Navigate to="/" replace />
-          ) : (
-            <EsqueciSenha />
-          )
+          isAuthenticated ? <Navigate to="/" replace /> : <EsqueciSenha />
         }
       />
 
