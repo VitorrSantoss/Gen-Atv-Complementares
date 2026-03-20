@@ -274,7 +274,7 @@ Este projeto foi desenvolvido com dedicação pela equipe acadêmica:
 | Integrantes      |
 | ---------------- |
 | Renan Souza      |
-| Vitória Barbosa  |
+| Vitória Barboza  |
 | Antonio Vinícius |
 | Lucas Vinícius   |
 | Jorge Figueredo  |
