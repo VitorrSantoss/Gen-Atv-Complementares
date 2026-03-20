@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import {
+  GraduationCap,
+  Shield,
+  Users,
+  LogIn,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { useAuth, type UserRole } from "@/contexts/AuthContext";
-import { GraduationCap, Shield, Users, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +52,8 @@ const Login = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole>("aluno");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -56,7 +65,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left */}
+      {/* Left - Hero */}
       <div className="hidden lg:flex lg:w-1/2 gradient-hero items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0 opacity-55">
           <div className="absolute top-20 left-20 w-[600px] h-[200px] rounded-full bg-primary blur-[120px]" />
@@ -64,7 +73,7 @@ const Login = () => {
         </div>
 
         <div className="relative z-10 text-center max-w-md">
-          <img src={logoSenac} alt="Logo do Senac" />
+          <img src={logoSenac} alt="Logo do Senac" className="mx-auto" />
           <h1 className="text-3xl font-bold text-primary-foreground mb-4">
             Atividades Complementares
           </h1>
@@ -74,12 +83,20 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Right */}
+      {/* Right - Form Container */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
-          <div>
-            <h2 className="text-2xl font-bold">Entrar no Sistema</h2>
-            <p className="text-muted-foreground">
+          {/* Cabeçalho centralizado com o GraduationCap */}
+          <div className="flex flex-col items-center text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 mb-4">
+              <GraduationCap className="h-7 w-7 text-primary" />
+            </div>
+
+            <h2 className="text-2xl font-bold text-foreground">
+              Entrar no Sistema
+            </h2>
+
+            <p className="text-muted-foreground mt-1">
               Selecione seu perfil e faça login
             </p>
           </div>
@@ -135,17 +152,39 @@ const Login = () => {
 
             <div>
               <Label>Senha</Label>
-              <Input
-                type="password"
-                placeholder="••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="pr-10"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showPassword ? (
+                    <Eye className="h-5 w-5" />
+                  ) : (
+                    <EyeOff className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
             </div>
 
-            {/* 🔥 LINK AQUI */}
-            <div className="text-right">
+
+
+            <Button type="submit" className="w-full">
+              <LogIn className="mr-2 h-5 w-5" />
+              Entrar como {roles.find((r) => r.value === selectedRole)?.label}
+            </Button>
+            <div className="text-center">
               <Link
                 to="/esqueci-senha"
                 className="text-sm text-primary hover:underline"
@@ -153,11 +192,6 @@ const Login = () => {
                 Esqueci minha senha
               </Link>
             </div>
-
-            <Button type="submit" className="w-full">
-              <LogIn className="mr-2 h-5 w-5" />
-              Entrar como {roles.find((r) => r.value === selectedRole)?.label}
-            </Button>
           </form>
         </div>
       </div>
