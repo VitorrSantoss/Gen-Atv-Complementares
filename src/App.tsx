@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
+// ✅ MODIFICAÇÃO: Importando o CourseProvider do seu arquivo de contexto
+import { CourseProvider } from "@/contexts/CourseContext";
+
 import Login from "./pages/Login";
 import EsqueciSenha from "./pages/EsqueciSenha";
 import NotFound from "./pages/NotFound";
@@ -123,11 +126,18 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        
+        {/* ✅ MODIFICAÇÃO: Envolvendo a aplicação com o CourseProvider */}
+        {/* A partir daqui, como o BrowserRouter e o AppRoutes estão DENTRO do CourseProvider, 
+            todas as páginas do seu sistema conseguem "enxergar" e usar os dados do curso atual! */}
+        <CourseProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </CourseProvider>
+        
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
