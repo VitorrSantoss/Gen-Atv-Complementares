@@ -31,6 +31,10 @@ type Course = {
   aprovadas: number;
   pendentes: number;
   rejeitadas: number;
+  // Adicionada a tipagem das categorias para evitar erros no TypeScript
+  categorias?: {
+    [key: string]: { limite: number; aprovadas: number };
+  };
 };
 
 type ActivityStatus = "aprovado" | "rejeitado" | "pendente";
@@ -49,7 +53,7 @@ type Activity = {
   arquivoTipo: ActivityFileType;
 };
 
-// ✅ MODIFICAÇÃO 2: A constante initialCourses foi apagada daqui, pois agora ela vive no CourseContext.tsx!
+//  A constante initialCourses foi apagada daqui, pois agora ela vive no CourseContext.tsx!
 
 const initialAtividades: Activity[] = [
   {
@@ -134,7 +138,7 @@ const StudentDashboard = () => {
   const [viewingActivity, setViewingActivity] = useState<Activity | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // ✅ MODIFICAÇÃO 4: Apagamos o const activeCourse que usava useMemo aqui, pois já vem do contexto!
+  //  Apagamos o const activeCourse que usava useMemo aqui, pois já vem do contexto!
 
   const filteredAtividades = useMemo(
     () => atividades.filter((a) => a.courseId === activeCourseId),
@@ -247,7 +251,7 @@ const StudentDashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* ✅ MODIFICAÇÃO 5: Trocado 'initialCourses' por 'courses' que vem do contexto */}
+                 {/*  Trocado 'initialCourses' por 'courses' que vem do contexto */}
                 {courses.map((c) => (
                   <button
                     key={c.id}
@@ -288,7 +292,7 @@ const StudentDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Progresso */}
+          {/* Progresso Geral */}
           <Card className="border border-slate-200 shadow-sm bg-white rounded-2xl overflow-hidden">
             <CardContent className="p-5 sm:p-6">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-6">
@@ -387,6 +391,33 @@ const StudentDashboard = () => {
               </Card>
             ))}
           </div>
+
+          {/* Progresso por Categoria */}
+          {activeCourse.categorias && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
+              {Object.entries(activeCourse.categorias).map(([catName, dados]: [string, any]) => {
+                const catPct = Math.min(100, Math.round((dados.aprovadas / dados.limite) * 100));
+                const displayName = catName === "Extensao" ? "Extensão" : catName;
+                return (
+                  <Card key={catName} className="border border-slate-200 shadow-sm bg-white rounded-xl">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase">{displayName}</p>
+                        <p className="text-xs font-semibold text-slate-700">{dados.aprovadas} / {dados.limite}h</p>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-1000 ease-out rounded-full ${catPct >= 100 ? 'bg-emerald-500' : 'bg-[#0066FF]'}`}
+                          style={{ width: `${catPct}%` }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
+
         </div>
 
         {/* Sidebar */}
