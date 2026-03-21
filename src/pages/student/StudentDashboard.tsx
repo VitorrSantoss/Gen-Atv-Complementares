@@ -21,6 +21,9 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+//Referente a Importação o hook do context
+import { useCourse } from "@/contexts/CourseContext";
+
 type Course = {
   id: string;
   name: string;
@@ -46,24 +49,7 @@ type Activity = {
   arquivoTipo: ActivityFileType;
 };
 
-const initialCourses: Course[] = [
-  {
-    id: "1",
-    name: "Engenharia de Software",
-    meta: 200,
-    aprovadas: 120,
-    pendentes: 20,
-    rejeitadas: 5,
-  },
-  {
-    id: "2",
-    name: "Administração",
-    meta: 150,
-    aprovadas: 45,
-    pendentes: 10,
-    rejeitadas: 2,
-  },
-];
+// ✅ MODIFICAÇÃO 2: A constante initialCourses foi apagada daqui, pois agora ela vive no CourseContext.tsx!
 
 const initialAtividades: Activity[] = [
   {
@@ -139,17 +125,16 @@ const getStatusLabel = (status: ActivityStatus) => {
 };
 
 const StudentDashboard = () => {
-  const [activeCourseId, setActiveCourseId] = useState(initialCourses[0].id);
+  // ✅ MODIFICAÇÃO 3: Puxando as informações de curso globais em vez de usar useState local
+  const { courses, activeCourseId, setActiveCourseId, activeCourse } = useCourse();
+
   const [atividades, setAtividades] = useState<Activity[]>(initialAtividades);
 
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [viewingActivity, setViewingActivity] = useState<Activity | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const activeCourse = useMemo(
-    () => initialCourses.find((c) => c.id === activeCourseId)!,
-    [activeCourseId]
-  );
+  // ✅ MODIFICAÇÃO 4: Apagamos o const activeCourse que usava useMemo aqui, pois já vem do contexto!
 
   const filteredAtividades = useMemo(
     () => atividades.filter((a) => a.courseId === activeCourseId),
@@ -262,7 +247,8 @@ const StudentDashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {initialCourses.map((c) => (
+                {/* ✅ MODIFICAÇÃO 5: Trocado 'initialCourses' por 'courses' que vem do contexto */}
+                {courses.map((c) => (
                   <button
                     key={c.id}
                     onClick={() => setActiveCourseId(c.id)}
