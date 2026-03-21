@@ -4,6 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Clock, Bell, Trash2, Pin, Mail, MailOpen, CheckCheck } from "lucide-react";
 
+// MODIFICAÇÃO 1: Importando o hook
+import { useCourse } from "@/contexts/CourseContext";
+
 const initialNotifications = [
   { id: "1", titulo: "Congresso de IA 2025", status: "aprovada", feedback: "Certificado válido. 20 horas computadas.", data: "2026-03-08T10:00:00", lida: false, pinned: false },
   { id: "2", titulo: "Palestra Design Thinking", status: "rejeitada", feedback: "O certificado não possui carga horária legível.", data: "2026-03-07T14:30:00", lida: false, pinned: true },
@@ -17,6 +20,9 @@ const statusConfig: Record<string, { icon: React.ElementType; color: string; bg:
 };
 
 const StudentNotifications = () => {
+  // MODIFICAÇÃO 2: Puxando o curso ativo do contexto
+  const { activeCourse } = useCourse();
+
   const [notifications, setNotifications] = useState(initialNotifications);
 
   const unreadCount = notifications.filter(n => !n.lida).length;
@@ -67,7 +73,10 @@ const StudentNotifications = () => {
       <div className="flex items-center justify-between pb-4 border-b border-slate-100">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Notificações</h1>
-          <p className="text-sm md:text-base text-slate-500 mt-1">Gerencie os alertas das suas submissões</p>
+          {/*  MODIFICAÇÃO 3: Exibindo o nome do curso para o aluno */}
+          <p className="text-sm md:text-base text-slate-500 mt-1">
+            Gerencie os alertas do curso de <strong className="text-[#0066FF]">{activeCourse.name}</strong>
+          </p>
         </div>
         
         <div className="flex items-center gap-2 sm:gap-3">
