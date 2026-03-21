@@ -103,6 +103,36 @@ const StudentSubmission = () => {
       return;
     }
 
+    // Forçando a tipagem como 'any' para evitar que o TypeScript
+    // quebre a aplicação caso o CourseContext.tsx não esteja fortemente tipado.
+    const cursoAtual = activeCourse as any;
+
+    if (cursoAtual.categorias) {
+      const keyMap: Record<string, string> = {
+        ensino: "Ensino",
+        pesquisa: "Pesquisa",
+        extensao: "Extensao", 
+        cultural: "Cultural"
+      };
+
+      const catKey = keyMap[categoria];
+      const regraCategoria = cursoAtual.categorias[catKey];
+
+      if (regraCategoria) {
+        const horasRestantes = regraCategoria.limite - regraCategoria.aprovadas;
+        const horasSolicitadas = Number(horas);
+
+        if (horasSolicitadas > horasRestantes) {
+          toast({
+            title: "Limite de horas excedido",
+            description: `Apenas restam ${Math.max(0, horasRestantes)}h disponíveis na categoria ${categoryLabels[categoria]}. (Limite total: ${regraCategoria.limite}h).`,
+            variant: "destructive",
+          });
+          return; 
+        }
+      }
+    }
+
     setSubmitted(true);
   };
 
