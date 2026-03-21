@@ -24,6 +24,9 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+//  MODIFICAÇÃO 1: Importando o hook
+import { useCourse } from "@/contexts/CourseContext";
+
 const categoryLabels: Record<string, string> = {
   pesquisa: "Pesquisa",
   extensao: "Extensão",
@@ -32,6 +35,9 @@ const categoryLabels: Record<string, string> = {
 };
 
 const StudentSubmission = () => {
+  //  MODIFICAÇÃO 2: Puxando o curso ativo do contexto
+  const { activeCourse } = useCourse();
+
   const [titulo, setTitulo] = useState("");
   const [categoria, setCategoria] = useState("");
   const [dataInicio, setDataInicio] = useState("");
@@ -111,8 +117,9 @@ const StudentSubmission = () => {
             >
               Nova Atividade
             </h1>
+            {/* MODIFICAÇÃO 3: Exibindo o nome do curso para o aluno na tela de sucesso */}
             <p className="text-slate-500 mt-1 text-sm sm:text-base">
-              Registre uma atividade complementar e envie o comprovante
+              Registre uma atividade complementar para o curso de <strong className="text-[#0066FF]">{activeCourse.name}</strong>
             </p>
           </div>
 
@@ -193,8 +200,9 @@ const StudentSubmission = () => {
         >
           Nova Atividade
         </h1>
+        {/*  MODIFICAÇÃO 4: Exibindo o nome do curso para o aluno na tela de formulário */}
         <p className="text-slate-500 mt-1 text-sm sm:text-base">
-          Registre uma atividade complementar e envie o comprovante
+          Registre uma atividade complementar para o curso de <strong className="text-[#0066FF]">{activeCourse.name}</strong>
         </p>
       </div>
 
