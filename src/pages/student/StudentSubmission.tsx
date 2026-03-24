@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +53,63 @@ const StudentSubmission = () => {
     () => (categoria ? categoryLabels[categoria] : "Não selecionada"),
     [categoria]
   );
+
+  // =========================================================================
+  //  NOVO: LÓGICA DE MODO OFFLINE / AUTO-SAVE
+  // =========================================================================
+  // Para melhorar a experiência do aluno no celular e evitar perda de dados por queda de internet ou atualização acidental da página, 
+  // implementamos um sistema de salvamento automático (Auto-Save).
+
+/* Explicando a logica criada. 
+        Criamos uma lógica usando o localStorage do navegador. Agora, sempre que o aluno digita qualquer coisa no formulário (Título, Horas, etc.), o aplicativo salva esses dados em segundo plano.
+        Isolamento por Curso: O rascunho é atrelado ao ID do curso selecionado. Se o aluno começar a preencher algo em "Engenharia" e mudar para "Administração", o formulário limpa. 
+        Mas quando ele voltar para "Engenharia", os dados retornam magicamente tudo através deesta logica implementada!
+        Limpeza Inteligente: Quando a atividade é enviada com sucesso, o sistema apaga o rascunho daquele curso para deixar o formulário limpo para a próxima submissão.
+ */
+
+  const draftKey = `draft_submission_${activeCourse.id}`;
+
+  // 1. CARREGAR o rascunho quando entra na página ou muda de curso
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(draftKey);
+    if (savedDraft) {
+      try {
+        const parsedDraft = JSON.parse(savedDraft);
+        setTitulo(parsedDraft.titulo || "");
+        setCategoria(parsedDraft.categoria || "");
+        setDataInicio(parsedDraft.dataInicio || "");
+        setHoras(parsedDraft.horas || "");
+        setDescricao(parsedDraft.descricao || "");
+
+        // Um pequeno delay evita que o toast dispare antes da interface estar pronta
+        setTimeout(() => {
+          toast({
+            title: "Rascunho recuperado",
+            description: "Os dados que você estava preenchendo foram restaurados.",
+          });
+        }, 300);
+      } catch (error) {
+        console.error("Erro ao ler rascunho", error);
+      }
+    } else {
+      // Se mudar para um curso que não tem rascunho, limpa a tela de texto
+      setTitulo("");
+      setCategoria("");
+      setDataInicio("");
+      setHoras("");
+      setDescricao("");
+    }
+  }, [activeCourse.id]); // Sem o toast na dependência para evita um loop infinito de renderização( é oq quebra o codigo)
+
+  // 2. Deixar salvo o rascunho automaticamente quando o usuário digita
+  useEffect(() => {
+    if (titulo || categoria || dataInicio || horas || descricao) {
+      const draft = { titulo, categoria, dataInicio, horas, descricao };
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+    }
+  }, [titulo, categoria, dataInicio, horas, descricao, draftKey]);
+  // =========================================================================
+
 
   const limparFormulario = () => {
     setTitulo("");
@@ -133,6 +190,8 @@ const StudentSubmission = () => {
       }
     }
 
+    // Apaga o rascunho quando a submissão dá certo
+    localStorage.removeItem(draftKey);
     setSubmitted(true);
   };
 
@@ -230,7 +289,7 @@ const StudentSubmission = () => {
         >
           Nova Atividade
         </h1>
-        {/*  MODIFICAÇÃO 4: Exibindo o nome do curso para o aluno na tela de formulário */}
+        {/* Exibindo o nome do curso para o aluno na tela de formulário */}
         <p className="text-slate-500 mt-1 text-sm sm:text-base">
           Registre uma atividade complementar para o curso de <strong className="text-[#0066FF]">{activeCourse.name}</strong>
         </p>
