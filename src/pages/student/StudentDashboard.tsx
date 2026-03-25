@@ -19,6 +19,7 @@ import {
   Target,
   FolderClock,
   TrendingUp,
+  Search, //  NOVO Ícone de pesquisa adicionado
 } from "lucide-react";
 
 //Referente a Importação o hook do context
@@ -111,14 +112,8 @@ const initialAtividades: Activity[] = [
 ];
 
 const getStatusBadge = (status: ActivityStatus) => {
-  if (status === "aprovado") {
-    return "text-emerald-600 bg-emerald-50 border-emerald-100";
-  }
-
-  if (status === "rejeitado") {
-    return "text-red-600 bg-red-50 border-red-100";
-  }
-
+  if (status === "aprovado") return "text-emerald-600 bg-emerald-50 border-emerald-100";
+  if (status === "rejeitado") return "text-red-600 bg-red-50 border-red-100";
   return "text-amber-600 bg-amber-50 border-amber-100";
 };
 
@@ -129,7 +124,7 @@ const getStatusLabel = (status: ActivityStatus) => {
 };
 
 const StudentDashboard = () => {
-  // ✅ MODIFICAÇÃO 3: Puxando as informações de curso globais em vez de usar useState local
+  // Puxando as informações de curso globais em vez de usar useState local
   const { courses, activeCourseId, setActiveCourseId, activeCourse } = useCourse();
 
   const [atividades, setAtividades] = useState<Activity[]>(initialAtividades);
@@ -138,12 +133,24 @@ const StudentDashboard = () => {
   const [viewingActivity, setViewingActivity] = useState<Activity | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  //  Apagamos o const activeCourse que usava useMemo aqui, pois já vem do contexto!
+  //  Estados para os filtros e pesquisa
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"todas" | ActivityStatus>("todas");
 
-  const filteredAtividades = useMemo(
+  // 1. Atividades do curso atual (usado para a contagem total no topo)
+  const courseAtividades = useMemo(
     () => atividades.filter((a) => a.courseId === activeCourseId),
     [atividades, activeCourseId]
   );
+
+  //  Atividades filtradas para mostrar na lista
+  const displayAtividades = useMemo(() => {
+    return courseAtividades.filter((a) => {
+      const matchStatus = statusFilter === "todas" || a.status === statusFilter;
+      const matchSearch = a.titulo.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchStatus && matchSearch;
+    });
+  }, [courseAtividades, statusFilter, searchTerm]);
 
   const pct = Math.min(
     100,
@@ -151,7 +158,7 @@ const StudentDashboard = () => {
   );
 
   const horasRestantes = Math.max(activeCourse.meta - activeCourse.aprovadas, 0);
-  const totalSubmissoes = filteredAtividades.length;
+  const totalSubmissoes = courseAtividades.length; // Usa a base total do curso
 
   useEffect(() => {
     if (editingActivity || viewingActivity) {
@@ -507,100 +514,144 @@ const StudentDashboard = () => {
       {/* Atividades */}
       <Card className="border border-slate-200 shadow-sm bg-white rounded-2xl overflow-hidden">
         <CardContent className="p-4 sm:p-5 lg:p-6">
-          <div className="mb-5">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1">
-              Histórico
-            </p>
-            <h2 className="text-lg sm:text-xl font-semibold text-slate-900">
-              Atividades Recentes
-            </h2>
+          
+          {/*  Cabeçalho com Filtros e Pesquisa */}
+          <div className="mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1">
+                Histórico
+              </p>
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-900">
+                Minhas Atividades
+              </h2>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              {/* Barra de Pesquisa */}
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Procurar atividade..." 
+                  className="w-full h-10 pl-9 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066FF]/20 focus:border-[#0066FF] transition-all"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              
+              {/* Filtros de Status */}
+              <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto hide-scrollbar">
+                {(["todas", "aprovado", "pendente", "rejeitado"] as const).map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setStatusFilter(status)}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg capitalize whitespace-nowrap transition-all ${
+                      statusFilter === status 
+                        ? "bg-white text-slate-900 shadow-sm" 
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    {status === "todas" ? "Todas" : status === "aprovado" ? "Validadas" : status === "rejeitado" ? "Recusadas" : "Em Análise"}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3">
-            {filteredAtividades.map((atv) => (
-              <Card
-                key={atv.id}
-                className={`border shadow-sm overflow-hidden transition-colors rounded-xl ${
-                  atv.status === "rejeitado"
-                    ? "border-red-100"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
-              >
-                <CardContent className="p-0">
-                  <div className="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div className="mt-0.5 w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 flex items-center justify-center shrink-0">
-                        <FileText className="h-5 w-5" />
-                      </div>
+          {/* : Estado Vazio se a pesquisa/filtro não encontrar nada */}
+          {displayAtividades.length === 0 ? (
+            <div className="text-center py-12 px-4 bg-slate-50 rounded-xl border border-slate-100 border-dashed">
+              <Search className="h-8 w-8 text-slate-300 mx-auto mb-3" />
+              <p className="text-sm font-medium text-slate-600">Nenhuma atividade encontrada.</p>
+              <p className="text-xs text-slate-400 mt-1">Tente ajustar a sua pesquisa ou os filtros selecionados.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3">
+              {displayAtividades.map((atv) => (
+                <Card
+                  key={atv.id}
+                  className={`border shadow-sm overflow-hidden transition-colors rounded-xl ${
+                    atv.status === "rejeitado"
+                      ? "border-red-100"
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <CardContent className="p-0">
+                    <div className="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="mt-0.5 w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 flex items-center justify-center shrink-0">
+                          <FileText className="h-5 w-5" />
+                        </div>
 
-                      <div className="min-w-0">
-                        <h4 className="font-semibold text-slate-900 text-sm sm:text-base leading-tight break-words">
-                          {atv.titulo}
-                        </h4>
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-slate-900 text-sm sm:text-base leading-tight break-words">
+                            {atv.titulo}
+                          </h4>
 
-                        <div className="flex flex-wrap items-center gap-2.5 mt-1.5">
-                          <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                            {atv.categoria}
-                          </span>
-                          <span className="w-1 h-1 rounded-full bg-slate-300" />
-                          <span className="text-sm text-slate-600">
-                            {atv.horas} horas
-                          </span>
-                          <span className="w-1 h-1 rounded-full bg-slate-300 hidden sm:block" />
-                          <span className="text-sm text-slate-500">
-                            {atv.data}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-2.5 mt-1.5">
+                            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                              {atv.categoria}
+                            </span>
+                            <span className="w-1 h-1 rounded-full bg-slate-300" />
+                            <span className="text-sm text-slate-600">
+                              {atv.horas} horas
+                            </span>
+                            <span className="w-1 h-1 rounded-full bg-slate-300 hidden sm:block" />
+                            <span className="text-sm text-slate-500">
+                              {atv.data}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 lg:justify-end lg:shrink-0">
-                      <div
-                        className={`inline-flex text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wide border ${getStatusBadge(
-                          atv.status
-                        )}`}
-                      >
-                        {getStatusLabel(atv.status)}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 lg:justify-end lg:shrink-0">
+                        <div
+                          className={`inline-flex text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wide border ${getStatusBadge(
+                            atv.status
+                          )}`}
+                        >
+                          {getStatusLabel(atv.status)}
+                        </div>
+
+                        {atv.status === "rejeitado" ? (
+                          <Button
+                            size="sm"
+                            onClick={() => handleRefazer(atv)}
+                            className="bg-[#0066FF] hover:bg-blue-700 text-white rounded-lg h-8 font-medium gap-2 px-3 shadow-sm"
+                          >
+                            <RefreshCcw className="h-3.5 w-3.5" />
+                            Refazer
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewDetails(atv)}
+                            className="border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 h-8 rounded-lg font-medium px-3 gap-2"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            Ver Doc
+                          </Button>
+                        )}
                       </div>
-
-                      {atv.status === "rejeitado" ? (
-                        <Button
-                          size="sm"
-                          onClick={() => handleRefazer(atv)}
-                          className="bg-[#0066FF] hover:bg-blue-700 text-white rounded-lg h-8 font-medium gap-2 px-3 shadow-sm"
-                        >
-                          <RefreshCcw className="h-3.5 w-3.5" />
-                          Refazer
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewDetails(atv)}
-                          className="border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 h-8 rounded-lg font-medium px-3 gap-2"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          Ver Doc
-                        </Button>
-                      )}
                     </div>
-                  </div>
 
-                  {atv.status === "rejeitado" && atv.feedback && (
-                    <div className="bg-red-50/80 px-4 py-3 border-t border-red-100 flex items-start gap-3">
-                      <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-                      <p className="text-sm text-red-700">
-                        <strong className="font-medium italic">
-                          Motivo da Recusa:
-                        </strong>{" "}
-                        <span className="italic">{atv.feedback}</span>
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    {atv.status === "rejeitado" && atv.feedback && (
+                      <div className="bg-red-50/80 px-4 py-3 border-t border-red-100 flex items-start gap-3">
+                        <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                        <p className="text-sm text-red-700">
+                          <strong className="font-medium italic">
+                            Motivo da Recusa:
+                          </strong>{" "}
+                          <span className="italic">{atv.feedback}</span>
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
