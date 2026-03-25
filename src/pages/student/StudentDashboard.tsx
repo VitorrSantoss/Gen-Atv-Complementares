@@ -19,12 +19,13 @@ import {
   Target,
   FolderClock,
   TrendingUp,
-  Search, //  NOVO Ícone de pesquisa adicionado
-  Printer, // Ícone de impressão
+  Search,//  NOVO Ícone de pesquisa adicionado
+  Printer,// Ícone de impressão
 } from "lucide-react";
 
 //Referente a Importação o hook do context
 import { useCourse } from "@/contexts/CourseContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Course = {
   id: string;
@@ -127,6 +128,9 @@ const getStatusLabel = (status: ActivityStatus) => {
 const StudentDashboard = () => {
   // Puxando as informações de curso globais em vez de usar useState local
   const { courses, activeCourseId, setActiveCourseId, activeCourse } = useCourse();
+  
+  const { user } = useAuth() as any;
+  const userName = user?.name || "Antonio Vinícius";
 
   const [atividades, setAtividades] = useState<Activity[]>(initialAtividades);
 
@@ -161,7 +165,7 @@ const StudentDashboard = () => {
   );
 
   const horasRestantes = Math.max(activeCourse.meta - activeCourse.aprovadas, 0);
-  const totalSubmissoes = courseAtividades.length; // Usa a base total do curso
+  const totalSubmissoes = courseAtividades.length;  // Usa a base total do curso
 
   useEffect(() => {
     if (editingActivity || viewingActivity) {
@@ -238,29 +242,40 @@ const StudentDashboard = () => {
     <>
       {/*  O ECRÃ NORMAL FICA INVISÍVEL NA IMPRESSÃO (print:hidden) */}
       <div className="w-full p-4 sm:p-5 lg:p-6 space-y-5 print:hidden">
-        {/* Cabeçalho */}
+        
+        {/*  CABEÇALHO */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1
               className="text-2xl sm:text-3xl font-bold text-slate-900"
               style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
             >
-              Meu Painel
+              Olá, {userName.split(' ')[0]}! 👋
             </h1>
             <p className="text-slate-500 mt-1 text-sm">
-              Acompanhe suas atividades complementares e o progresso por curso
+              Acompanhe as suas atividades complementares e o progresso por curso
             </p>
           </div>
           
-          {/* Botão de imprimir */}
-          <Button 
-            onClick={handlePrint}
-            variant="outline" 
-            className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-[#0066FF] gap-2 h-10 rounded-xl font-semibold shadow-sm w-full sm:w-auto"
-          >
-            <Printer className="h-4 w-4" />
-            Baixar Extrato (PDF)
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={handlePrint}
+              variant="outline" 
+              className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-[#0066FF] gap-2 h-12 rounded-xl font-semibold shadow-sm hidden sm:flex"
+            >
+              <Printer className="h-4 w-4" />
+              Extrato (PDF)
+            </Button>
+            
+            <Button 
+              onClick={handlePrint}
+              variant="outline" 
+              size="icon"
+              className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-[#0066FF] h-12 w-12 rounded-xl font-semibold shadow-sm sm:hidden shrink-0"
+            >
+              <Printer className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
         {/* Topo */}
@@ -675,7 +690,7 @@ const StudentDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Modal visualização e Edição */}
+        {/* Modal visualização e edição */}
         {viewingActivity &&
           createPortal(
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
@@ -804,7 +819,7 @@ const StudentDashboard = () => {
             document.body
           )}
 
- {/* Modal edição */}
+        {/* Modal de edição */}
         {editingActivity &&
           createPortal(
             <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
@@ -975,15 +990,19 @@ const StudentDashboard = () => {
           </div>
         </div>
 
-        <div className="mb-8 grid grid-cols-2 gap-4">
-          <div>
+        <div className="mb-8 grid grid-cols-3 gap-4">
+          <div className="col-span-1">
+            <p className="text-xs uppercase text-gray-500">Aluno</p>
+            <p className="font-bold text-lg">{userName}</p>
+          </div>
+          <div className="col-span-1">
             <p className="text-xs uppercase text-gray-500">Curso Vinculado</p>
             <p className="font-bold text-lg">{activeCourse.name}</p>
           </div>
-          <div>
-            <p className="text-xs uppercase text-gray-500">Situação do Aluno</p>
+          <div className="col-span-1">
+            <p className="text-xs uppercase text-gray-500">Situação Atual</p>
             <p className="font-bold text-lg">
-              {activeCourse.aprovadas}h validadas de {activeCourse.meta}h ({pct}%)
+              {activeCourse.aprovadas}h de {activeCourse.meta}h ({pct}%)
             </p>
           </div>
         </div>
@@ -991,7 +1010,7 @@ const StudentDashboard = () => {
         <h3 className="text-lg font-bold mb-3 border-b border-gray-300 pb-1">Atividades Validadas</h3>
         
         {atividadesAprovadas.length === 0 ? (
-          <p className="text-gray-500 italic">Nenhuma atividade validada até o momento.</p>
+          <p className="text-gray-500 italic">Nenhuma atividade validada até ao momento.</p>
         ) : (
           <table className="w-full text-left border-collapse mt-2">
             <thead>
