@@ -20,7 +20,7 @@ const statusConfig: Record<string, { icon: React.ElementType; color: string; bg:
 };
 
 const StudentNotifications = () => {
-  // MODIFICAÇÃO 2: Puxando o curso ativo do contexto
+    // MODIFICAÇÃO 2: Puxando o curso ativo do contexto
   const { activeCourse } = useCourse();
 
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -67,7 +67,7 @@ const StudentNotifications = () => {
   };
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-6 md:py-8 space-y-6">
+    <div className="w-full p-4 sm:p-5 lg:p-6 space-y-6">
       
       {/* HEADER */}
       <div className="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -112,7 +112,7 @@ const StudentNotifications = () => {
         </div>
       </div>
 
-      {/* LISTA DE NOTIFICAÇÕES (Mantida igual) */}
+      {/* LISTA DE NOTIFICAÇÕES */}
       <div className="space-y-3 sm:space-y-4">
         {sortedNotifications.length === 0 ? (
           <div className="text-center py-12 text-slate-400">
