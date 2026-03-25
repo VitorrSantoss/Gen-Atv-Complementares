@@ -17,14 +17,24 @@ const StudentLayout = () => {
 
   const handleLogout = () => { logout(); navigate("/"); };
 
+  //  Extraimos a primeira letra do nome do utilizador (ou 'A' como fallback)
+  const initial = user?.name ? user.name.charAt(0).toUpperCase() : "A";
+
   const SidebarContent = () => (
     <>
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-accent flex items-center justify-center text-accent-foreground font-bold text-sm">AL</div>
-          <div>
-            <p className="text-sm font-semibold text-sidebar-foreground">{user?.name}</p>
-            <p className="text-xs text-sidebar-foreground/60">Aluno</p>
+          {/*  Crachá Dinâmico */}
+          <div className="w-10 h-10 rounded-xl gradient-accent flex items-center justify-center text-accent-foreground font-bold text-lg">
+            {initial}
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-sm font-semibold text-sidebar-foreground truncate max-w-[150px]">
+              {user?.name || "Aluno Senac"}
+            </p>
+            <p className="text-[10px] text-sidebar-foreground/60 truncate max-w-[150px]">
+              {user?.email || "aluno@senac.br"}
+            </p>
           </div>
         </div>
       </div>
