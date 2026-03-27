@@ -1,12 +1,13 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Upload, Bell, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Upload, Bell, LogOut, Menu, X, BookOpen } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 const links = [
   { to: "/aluno", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/aluno/submissao", icon: Upload, label: "Nova Submissão" },
+  { to: "/aluno/regras", icon: BookOpen, label: "Regras do Curso" },
   { to: "/aluno/notificacoes", icon: Bell, label: "Notificações" },
 ];
 
@@ -17,14 +18,12 @@ const StudentLayout = () => {
 
   const handleLogout = () => { logout(); navigate("/"); };
 
-  //  Extraimos a primeira letra do nome do utilizador (ou 'A' como fallback)
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : "A";
 
   const SidebarContent = () => (
     <>
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          {/*  Crachá Dinâmico */}
           <div className="w-10 h-10 rounded-xl gradient-accent flex items-center justify-center text-accent-foreground font-bold text-lg">
             {initial}
           </div>

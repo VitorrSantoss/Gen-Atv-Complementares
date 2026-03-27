@@ -26,6 +26,7 @@ import StudentLayout from "./components/layout/StudentLayout";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import StudentSubmission from "./pages/student/StudentSubmission";
 import StudentNotifications from "./pages/student/StudentNotifications";
+import StudentRules from "./pages/student/StudentRules"; //  Importando a nova página de regras para os alunos
 
 const queryClient = new QueryClient();
 
@@ -119,6 +120,7 @@ const AppRoutes = () => {
       >
         <Route index element={<StudentDashboard />} />
         <Route path="submissao" element={<StudentSubmission />} />
+        <Route path="regras" element={<StudentRules />} /> {/* Nova rota adicionada com as regras para os alunos */}
         <Route path="notificacoes" element={<StudentNotifications />} />
       </Route>
 
