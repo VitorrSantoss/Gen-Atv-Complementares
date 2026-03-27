@@ -4,8 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-
-// ✅ MODIFICAÇÃO: Importando o CourseProvider do seu arquivo de contexto
 import { CourseProvider } from "@/contexts/CourseContext";
 
 import Login from "./pages/Login";
@@ -22,6 +20,7 @@ import CoordinatorDashboard from "./pages/coordinator/CoordinatorDashboard";
 import CoordinatorStudents from "./pages/coordinator/CoordinatorStudents";
 import CoordinatorRules from "./pages/coordinator/CoordinatorRules";
 import CoordinatorSubmissions from "./pages/coordinator/CoordinatorSubmissions";
+import CoordinatorClasses from "./pages/coordinator/CoordinatorClasses";
 
 import StudentLayout from "./components/layout/StudentLayout";
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -39,8 +38,13 @@ const ProtectedRoute = ({
 }) => {
   const { user, isAuthenticated } = useAuth();
 
-  if (!isAuthenticated) return <Navigate to="/" replace />;
-  if (!allowedRoles.includes(user!.role)) return <Navigate to="/" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (!user || !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
 
   return <>{children}</>;
 };
@@ -53,14 +57,14 @@ const AppRoutes = () => {
       <Route
         path="/"
         element={
-          isAuthenticated ? (
+          isAuthenticated && user ? (
             <Navigate
               to={
-                user!.role === "superadmin"
+                user.role === "superadmin"
                   ? "/admin"
-                  : user!.role === "coordenador"
-                    ? "/coordenador"
-                    : "/aluno"
+                  : user.role === "coordenador"
+                  ? "/coordenador"
+                  : "/aluno"
               }
               replace
             />
@@ -99,6 +103,7 @@ const AppRoutes = () => {
         }
       >
         <Route index element={<CoordinatorDashboard />} />
+        <Route path="turmas" element={<CoordinatorClasses />} />
         <Route path="alunos" element={<CoordinatorStudents />} />
         <Route path="regras" element={<CoordinatorRules />} />
         <Route path="solicitacoes" element={<CoordinatorSubmissions />} />
@@ -122,25 +127,22 @@ const AppRoutes = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        
-        {/* ✅ MODIFICAÇÃO: Envolvendo a aplicação com o CourseProvider */}
-        {/* A partir daqui, como o BrowserRouter e o AppRoutes estão DENTRO do CourseProvider, 
-            todas as páginas do seu sistema conseguem "enxergar" e usar os dados do curso atual! */}
-        <CourseProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </CourseProvider>
-        
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <CourseProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </CourseProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
