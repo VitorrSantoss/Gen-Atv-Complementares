@@ -7,6 +7,7 @@ interface User {
   name: string;
   email: string;
   role: UserRole;
+  coordinatedCourses?: string[];
 }
 
 interface AuthContextType {
@@ -19,9 +20,25 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const mockUsers: Record<UserRole, User> = {
-  superadmin: { id: "1", name: "Admin Master", email: "admin@sistema.com", role: "superadmin" },
-  coordenador: { id: "2", name: "Prof. Maria Silva", email: "maria@universidade.com", role: "coordenador" },
-  aluno: { id: "3", name: "João Santos", email: "joao@aluno.com", role: "aluno" },
+  superadmin: {
+    id: "1",
+    name: "Admin Master",
+    email: "admin@sistema.com",
+    role: "superadmin",
+  },
+  coordenador: {
+    id: "2",
+    name: "Prof. Maria Silva",
+    email: "maria@universidade.com",
+    role: "coordenador",
+    coordinatedCourses: ["1", "2"],
+  },
+  aluno: {
+    id: "3",
+    name: "João Santos",
+    email: "joao@aluno.com",
+    role: "aluno",
+  },
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -36,7 +53,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
