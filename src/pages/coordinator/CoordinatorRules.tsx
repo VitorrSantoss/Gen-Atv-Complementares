@@ -111,7 +111,7 @@ const initialRules: Rule[] = [
   {
     id: "2",
     area: "Pesquisa",
-    maxHoras: 60,
+    maxHoras: 90,
     descricao: "Atividades vinculadas à Pesquisa.",
     cor: "border-emerald-500",
     bgBadge: "bg-emerald-100 text-emerald-700",
@@ -152,7 +152,7 @@ const initialRules: Rule[] = [
   {
     id: "3",
     area: "Extensão",
-    maxHoras: 50,
+    maxHoras: 75,
     descricao: "Atividades vinculadas à Extensão.",
     cor: "border-orange-500",
     bgBadge: "bg-orange-100 text-orange-700",
