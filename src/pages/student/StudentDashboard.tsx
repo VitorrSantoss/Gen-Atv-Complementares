@@ -19,8 +19,8 @@ import {
   Target,
   FolderClock,
   TrendingUp,
-  Search,//  NOVO Ícone de pesquisa adicionado
-  Printer,// Ícone de impressão
+  Search,
+  Printer,
 } from "lucide-react";
 
 //Referente a Importação o hook do context
@@ -43,13 +43,14 @@ type Course = {
 type ActivityStatus = "aprovado" | "rejeitado" | "pendente";
 type ActivityFileType = "pdf" | "image";
 
+// MODIFICAÇÃO: O campo 'data' foi alterado para 'semestre'
 type Activity = {
   id: string;
   courseId: string;
   titulo: string;
   categoria: string;
   horas: number;
-  data: string;
+  semestre: string;
   status: ActivityStatus;
   feedback: string;
   arquivoURL: string;
@@ -65,7 +66,7 @@ const initialAtividades: Activity[] = [
     titulo: "Curso de React Advanced",
     categoria: "Ensino",
     horas: 40,
-    data: "12/02/2026",
+    semestre: "2026.1",
     status: "aprovado",
     feedback: "",
     arquivoURL:
@@ -78,7 +79,7 @@ const initialAtividades: Activity[] = [
     titulo: "Palestra: Futuro da IA",
     categoria: "Cultural",
     horas: 5,
-    data: "10/02/2026",
+    semestre: "2026.1",
     status: "rejeitado",
     feedback:
       "Carga horária não visível no certificado. Envie uma foto mais nítida.",
@@ -91,7 +92,7 @@ const initialAtividades: Activity[] = [
     titulo: "Monitoria Algoritmos I",
     categoria: "Ensino",
     horas: 60,
-    data: "05/02/2026",
+    semestre: "2025.2",
     status: "pendente",
     feedback: "",
     arquivoURL:
@@ -104,7 +105,7 @@ const initialAtividades: Activity[] = [
     titulo: "Workshop Gestão Financeira",
     categoria: "Extensão",
     horas: 15,
-    data: "01/03/2026",
+    semestre: "2026.1",
     status: "aprovado",
     feedback: "",
     arquivoURL:
@@ -165,7 +166,7 @@ const StudentDashboard = () => {
   );
 
   const horasRestantes = Math.max(activeCourse.meta - activeCourse.aprovadas, 0);
-  const totalSubmissoes = courseAtividades.length;  // Usa a base total do curso
+  const totalSubmissoes = courseAtividades.length;
 
   useEffect(() => {
     if (editingActivity || viewingActivity) {
@@ -632,8 +633,9 @@ const StudentDashboard = () => {
                                 {atv.horas} horas
                               </span>
                               <span className="w-1 h-1 rounded-full bg-slate-300 hidden sm:block" />
+                              {/* ✅ MODIFICAÇÃO: Exibição do semestre no card */}
                               <span className="text-sm text-slate-500">
-                                {atv.data}
+                                Semestre: {atv.semestre}
                               </span>
                             </div>
                           </div>
@@ -690,7 +692,7 @@ const StudentDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Modal visualização e edição */}
+        {/* Modal visualização */}
         {viewingActivity &&
           createPortal(
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
@@ -740,13 +742,14 @@ const StudentDashboard = () => {
                       </p>
                     </div>
 
+                    {/* ✅ MODIFICAÇÃO: Trocado Data por Semestre */}
                     <div className="bg-white p-3 border border-slate-100 rounded-xl shadow-sm">
                       <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-1">
                         <Calendar className="h-3 w-3" />
-                        Data
+                        Semestre
                       </p>
                       <p className="text-sm font-medium text-slate-800">
-                        {viewingActivity.data}
+                        {viewingActivity.semestre}
                       </p>
                     </div>
 
@@ -976,9 +979,7 @@ const StudentDashboard = () => {
           )}
       </div>
 
-      {/* ======================================================================================= */}
-      {/*  LAYOUT EXCLUSIVO PARA IMPRESSÃO (Fica invisível na ecrã normal - print:block) */}
-      {/* ======================================================================================= */}
+      {/* ✅ MODIFICAÇÃO: Tabela de impressão em PDF (Substituído Data por Semestre) */}
       <div className="hidden print:block p-8 bg-white text-black font-sans min-h-screen">
         <div className="border-b-2 border-black pb-4 mb-6 flex justify-between items-end">
           <div>
@@ -1015,7 +1016,7 @@ const StudentDashboard = () => {
           <table className="w-full text-left border-collapse mt-2">
             <thead>
               <tr className="bg-gray-100">
-                <th className="border-b border-gray-300 py-2 px-3 text-sm font-semibold">Data</th>
+                <th className="border-b border-gray-300 py-2 px-3 text-sm font-semibold">Semestre</th>
                 <th className="border-b border-gray-300 py-2 px-3 text-sm font-semibold">Atividade</th>
                 <th className="border-b border-gray-300 py-2 px-3 text-sm font-semibold">Categoria</th>
                 <th className="border-b border-gray-300 py-2 px-3 text-sm font-semibold text-right">Horas</th>
@@ -1024,7 +1025,7 @@ const StudentDashboard = () => {
             <tbody>
               {atividadesAprovadas.map((atv, idx) => (
                 <tr key={atv.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                  <td className="border-b border-gray-200 py-2 px-3 text-sm">{atv.data}</td>
+                  <td className="border-b border-gray-200 py-2 px-3 text-sm">{atv.semestre}</td>
                   <td className="border-b border-gray-200 py-2 px-3 text-sm font-medium">{atv.titulo}</td>
                   <td className="border-b border-gray-200 py-2 px-3 text-sm uppercase text-xs">{atv.categoria}</td>
                   <td className="border-b border-gray-200 py-2 px-3 text-sm font-bold text-right">{atv.horas}h</td>

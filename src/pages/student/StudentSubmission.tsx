@@ -23,7 +23,7 @@ import {
   Clock3,
   FolderOpen,
   RotateCw,
-  Crop as CropIcon, // Ícone atualizado
+  Crop as CropIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -47,7 +47,8 @@ const StudentSubmission = () => {
 
   const [titulo, setTitulo] = useState("");
   const [categoria, setCategoria] = useState("");
-  const [dataInicio, setDataInicio] = useState("");
+  // MODIFICAÇÃO: Alterado de dataInicio para semestre
+  const [semestre, setSemestre] = useState("");
   const [horas, setHoras] = useState("");
   const [descricao, setDescricao] = useState("");
   const [arquivo, setArquivo] = useState<File | null>(null);
@@ -91,7 +92,8 @@ const StudentSubmission = () => {
         const parsedDraft = JSON.parse(savedDraft);
         setTitulo(parsedDraft.titulo || "");
         setCategoria(parsedDraft.categoria || "");
-        setDataInicio(parsedDraft.dataInicio || "");
+        // ✅ Recupera o semestre
+        setSemestre(parsedDraft.semestre || "");
         setHoras(parsedDraft.horas || "");
         setDescricao(parsedDraft.descricao || "");
 
@@ -109,19 +111,19 @@ const StudentSubmission = () => {
       // Se mudar para um curso que não tem rascunho, limpa a tela de texto
       setTitulo("");
       setCategoria("");
-      setDataInicio("");
+      setSemestre("");
       setHoras("");
       setDescricao("");
     }
-  }, [activeCourse.id, toast]); // Sem o toast na dependência para evita um loop infinito de renderização( é oq quebra o codigo)
+  }, [activeCourse.id, toast]);
 
   // 2. Deixar salvo o rascunho automaticamente quando o usuário digita
   useEffect(() => {
-    if (titulo || categoria || dataInicio || horas || descricao) {
-      const draft = { titulo, categoria, dataInicio, horas, descricao };
+    if (titulo || categoria || semestre || horas || descricao) {
+      const draft = { titulo, categoria, semestre, horas, descricao };
       localStorage.setItem(draftKey, JSON.stringify(draft));
     }
-  }, [titulo, categoria, dataInicio, horas, descricao, draftKey]);
+  }, [titulo, categoria, semestre, horas, descricao, draftKey]);
 
   // =========================================================================
   // LÓGICA DE FICHEIROS E AJUSTE DE IMAGEM
@@ -251,7 +253,7 @@ const StudentSubmission = () => {
   const limparFormulario = () => {
     setTitulo("");
     setCategoria("");
-    setDataInicio("");
+    setSemestre("");
     setHoras("");
     setDescricao("");
     setArquivo(null);
@@ -264,7 +266,7 @@ const StudentSubmission = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!titulo || !categoria || !dataInicio || !horas || !arquivo) {
+    if (!titulo || !categoria || !semestre || !horas || !arquivo) {
       toast({
         title: "Campos obrigatórios",
         description: "Preencha todos os campos e anexe um comprovante.",
@@ -371,9 +373,9 @@ const StudentSubmission = () => {
 
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left">
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">
-                      Data de início
+                      Semestre
                     </p>
-                    <p className="font-semibold text-slate-900">{dataInicio}</p>
+                    <p className="font-semibold text-slate-900">{semestre}</p>
                   </div>
 
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left">
@@ -454,16 +456,18 @@ const StudentSubmission = () => {
                   </Select>
                 </div>
 
+                {/* ✅ MODIFICAÇÃO: Trocado Data de Início por Semestre */}
                 <div className="lg:col-span-4 space-y-2">
-                  <Label htmlFor="data" className="text-slate-700 font-medium">
-                    Data de Início *
+                  <Label htmlFor="semestre" className="text-slate-700 font-medium">
+                    Semestre *
                   </Label>
                   <Input
-                    id="data"
-                    type="date"
+                    id="semestre"
+                    type="text"
+                    placeholder="Ex: 2024.1"
                     className="bg-slate-50 border-slate-200 h-11 rounded-xl"
-                    value={dataInicio}
-                    onChange={(e) => setDataInicio(e.target.value)}
+                    value={semestre}
+                    onChange={(e) => setSemestre(e.target.value)}
                   />
                 </div>
 
@@ -593,7 +597,7 @@ const StudentSubmission = () => {
               <div className="space-y-4 text-sm text-slate-600">
                 <div className="flex gap-3">
                   <CalendarDays className="h-4 w-4 mt-0.5 text-slate-400 shrink-0" />
-                  <p>Informe corretamente a data de início da atividade.</p>
+                  <p>Informe corretamente o semestre em que realizou a atividade.</p>
                 </div>
 
                 <div className="flex gap-3">
@@ -647,10 +651,10 @@ const StudentSubmission = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">
-                      Data
+                      Semestre
                     </p>
                     <p className="text-sm font-medium text-slate-900">
-                      {dataInicio || "--/--/----"}
+                      {semestre || "--"}
                     </p>
                   </div>
 
