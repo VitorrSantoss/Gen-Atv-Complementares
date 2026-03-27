@@ -253,22 +253,22 @@ const CoordinatorClasses = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Minhas Turmas</h1>
-        <p className="text-muted-foreground">
-          Gerencie apenas as turmas dos cursos sob sua coordenação
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Minhas Turmas</h1>
+          <p className="text-muted-foreground">
+            Gerencie apenas as turmas dos cursos sob sua coordenação
+          </p>
+        </div>
+
+        <Button onClick={openCreateDialog} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Nova Turma
+        </Button>
       </div>
 
       <Card className="rounded-2xl shadow-sm border-0">
         <CardContent className="space-y-4 pt-6">
-          <div className="flex justify-end">
-            <Button onClick={openCreateDialog} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Nova Turma
-            </Button>
-          </div>
-
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="rounded-2xl">
               <CardContent className="flex items-center gap-3 p-4">
