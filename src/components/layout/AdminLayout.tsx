@@ -1,13 +1,14 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, BookOpen, Users, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, BookOpen, Users, Layers, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 const links = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/admin/cursos", icon: BookOpen, label: "Cursos" },
-  { to: "/admin/coordenadores", icon: Users, label: "Coordenadores" },
+  { to: "/admin/turmas", icon: Layers, label: "Turmas" },
+  { to: "/admin/coordenadores", icon: Users, label: "Acessos" },
 ];
 
 const AdminLayout = () => {
@@ -56,11 +57,9 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:w-64 flex-col bg-sidebar fixed inset-y-0 z-30">
         <SidebarContent />
       </aside>
-      {/* Mobile sidebar */}
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-40">
           <div className="absolute inset-0 bg-foreground/50" onClick={() => setSidebarOpen(false)} />

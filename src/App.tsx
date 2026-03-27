@@ -14,6 +14,7 @@ import AdminLayout from "./components/layout/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminCoordinators from "./pages/admin/AdminCoordinators";
+import AdminClasses from "./pages/admin/AdminClasses"; // ✅ Importando a página de turmas do Admin
 
 import CoordinatorLayout from "./components/layout/CoordinatorLayout";
 import CoordinatorDashboard from "./pages/coordinator/CoordinatorDashboard";
@@ -26,7 +27,7 @@ import StudentLayout from "./components/layout/StudentLayout";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import StudentSubmission from "./pages/student/StudentSubmission";
 import StudentNotifications from "./pages/student/StudentNotifications";
-import StudentRules from "./pages/student/StudentRules"; //  Importando a nova página de regras para os alunos
+import StudentRules from "./pages/student/StudentRules"; // Importando a nova página de regras para os alunos
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,7 @@ const AppRoutes = () => {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="cursos" element={<AdminCourses />} />
+        <Route path="turmas" element={<AdminClasses />} /> {/* ✅ Nova rota adicionada para gestão de turmas (Super Admin) */}
         <Route path="coordenadores" element={<AdminCoordinators />} />
       </Route>
 
