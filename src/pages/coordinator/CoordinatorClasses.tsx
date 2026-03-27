@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -146,7 +146,10 @@ const CoordinatorClasses = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   const [selectedClass, setSelectedClass] = useState<ClassGroup | null>(null);
-  const [formData, setFormData] = useState(emptyForm);
+  const [formData, setFormData] = useState({
+    ...emptyForm,
+    courseId: myCourses[0]?.id ?? "",
+  });
 
   const allowedClasses = classes.filter((item) =>
     myCourseIds.includes(item.courseId)
@@ -250,28 +253,30 @@ const CoordinatorClasses = () => {
 
   return (
     <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Minhas Turmas</h1>
+        <p className="text-muted-foreground">
+          Gerencie apenas as turmas dos cursos sob sua coordenação
+        </p>
+      </div>
+
       <Card className="rounded-2xl shadow-sm border-0">
-        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Minhas Turmas</h1>
-            <p className="text-muted-foreground">
-              Gerencie apenas as turmas dos cursos sob sua coordenação
-            </p>
+        <CardContent className="space-y-4 pt-6">
+          <div className="flex justify-end">
+            <Button onClick={openCreateDialog} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nova Turma
+            </Button>
           </div>
 
-          <Button onClick={openCreateDialog} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Nova Turma
-          </Button>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="rounded-2xl">
               <CardContent className="flex items-center gap-3 p-4">
                 <BookOpen className="h-8 w-8 text-primary" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Cursos vinculados</p>
+                  <p className="text-sm text-muted-foreground">
+                    Cursos vinculados
+                  </p>
                   <p className="text-2xl font-bold">{myCourses.length}</p>
                 </div>
               </CardContent>
@@ -281,7 +286,9 @@ const CoordinatorClasses = () => {
               <CardContent className="flex items-center gap-3 p-4">
                 <Users2 className="h-8 w-8 text-primary" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Turmas cadastradas</p>
+                  <p className="text-sm text-muted-foreground">
+                    Turmas cadastradas
+                  </p>
                   <p className="text-2xl font-bold">{allowedClasses.length}</p>
                 </div>
               </CardContent>
@@ -291,7 +298,9 @@ const CoordinatorClasses = () => {
               <CardContent className="flex items-center gap-3 p-4">
                 <Users2 className="h-8 w-8 text-primary" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Alunos nas turmas</p>
+                  <p className="text-sm text-muted-foreground">
+                    Alunos nas turmas
+                  </p>
                   <p className="text-2xl font-bold">
                     {allowedClasses.reduce((acc, item) => acc + item.students, 0)}
                   </p>
