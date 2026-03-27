@@ -45,12 +45,9 @@ interface Course {
 
 interface ClassGroup {
   id: string;
-  name: string;
   code: string;
   semester: string;
   shift: string;
-  vacancies: number;
-  students: number;
   status: "ativa" | "encerrada";
   courseId: string;
   courseName: string;
@@ -61,53 +58,42 @@ const allCourses: Course[] = [
   { id: "2", name: "Administração", code: "ADM" },
   { id: "3", name: "Direito", code: "DIR" },
   { id: "4", name: "Medicina", code: "MED" },
+  { id: "5", name: "Análise e Desenv. de Sistemas", code: "ADS" },
 ];
 
 const initialClasses: ClassGroup[] = [
   {
     id: "1",
-    name: "Turma A - 2026.1",
     code: "ES-A26",
     semester: "2026.1",
     shift: "Noite",
-    vacancies: 40,
-    students: 34,
     status: "ativa",
     courseId: "1",
     courseName: "Engenharia de Software",
   },
   {
     id: "2",
-    name: "Turma B - 2026.1",
-    code: "ES-B26",
+    code: "TADS044",
     semester: "2026.1",
     shift: "Manhã",
-    vacancies: 35,
-    students: 29,
     status: "ativa",
-    courseId: "1",
-    courseName: "Engenharia de Software",
+    courseId: "5",
+    courseName: "Análise e Desenv. de Sistemas",
   },
   {
     id: "3",
-    name: "Turma Única - 2026.1",
     code: "ADM-U26",
     semester: "2026.1",
     shift: "Noite",
-    vacancies: 45,
-    students: 40,
     status: "ativa",
     courseId: "2",
     courseName: "Administração",
   },
   {
     id: "4",
-    name: "Turma 2025.2",
     code: "DIR-25B",
     semester: "2025.2",
     shift: "Tarde",
-    vacancies: 50,
-    students: 50,
     status: "encerrada",
     courseId: "3",
     courseName: "Direito",
@@ -116,12 +102,9 @@ const initialClasses: ClassGroup[] = [
 
 const emptyForm = {
   id: "",
-  name: "",
   code: "",
   semester: "",
   shift: "",
-  vacancies: "",
-  students: "",
   status: "ativa" as "ativa" | "encerrada",
   courseId: "",
 };
@@ -130,7 +113,7 @@ const CoordinatorClasses = () => {
   const { user } = useAuth();
   const coordinator = user as CoordinatorUser | null;
 
-  const myCourseIds = coordinator?.coordinatedCourses ?? ["1", "2"];
+  const myCourseIds = coordinator?.coordinatedCourses ?? ["1", "2", "3", "4", "5"];
 
   const myCourses = useMemo(
     () => allCourses.filter((course) => myCourseIds.includes(course.id)),
@@ -161,17 +144,20 @@ const CoordinatorClasses = () => {
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
 
-    const normalizedName = item.name
+    const normalizedCode = item.code
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
 
-    const normalizedCode = item.code.toLowerCase();
+    const normalizedCourse = item.courseName
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
 
     const matchesSearch =
       !search ||
-      normalizedName.includes(normalizedSearch) ||
-      normalizedCode.includes(search.toLowerCase());
+      normalizedCode.includes(normalizedSearch) ||
+      normalizedCourse.includes(normalizedSearch);
 
     const matchesCourse =
       courseFilter === "todos" || item.courseId === courseFilter;
@@ -198,12 +184,9 @@ const CoordinatorClasses = () => {
     setSelectedClass(item);
     setFormData({
       id: item.id,
-      name: item.name,
       code: item.code,
       semester: item.semester,
       shift: item.shift,
-      vacancies: String(item.vacancies),
-      students: String(item.students),
       status: item.status,
       courseId: item.courseId,
     });
@@ -216,12 +199,9 @@ const CoordinatorClasses = () => {
 
     const payload: ClassGroup = {
       id: formData.id || Math.random().toString(36).substring(2, 9),
-      name: formData.name,
       code: formData.code,
       semester: formData.semester,
       shift: formData.shift,
-      vacancies: Number(formData.vacancies) || 0,
-      students: Number(formData.students) || 0,
       status: formData.status,
       courseId: formData.courseId,
       courseName: selectedCourse.name,
@@ -269,7 +249,8 @@ const CoordinatorClasses = () => {
 
       <Card className="rounded-2xl shadow-sm border-0">
         <CardContent className="space-y-4 pt-6">
-          <div className="grid gap-4 md:grid-cols-3">
+          {/* Cards Superiores - Ajustados para grid-cols-2 */}
+          <div className="grid gap-4 md:grid-cols-2">
             <Card className="rounded-2xl">
               <CardContent className="flex items-center gap-3 p-4">
                 <BookOpen className="h-8 w-8 text-primary" />
@@ -293,27 +274,14 @@ const CoordinatorClasses = () => {
                 </div>
               </CardContent>
             </Card>
-
-            <Card className="rounded-2xl">
-              <CardContent className="flex items-center gap-3 p-4">
-                <Users2 className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Alunos nas turmas
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {allowedClasses.reduce((acc, item) => acc + item.students, 0)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
+          {/* Filtros */}
           <div className="grid gap-3 md:grid-cols-2">
             <div className="relative">
               <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome ou código da turma"
+                placeholder="Buscar por turma ou curso..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -335,6 +303,7 @@ const CoordinatorClasses = () => {
             </Select>
           </div>
 
+          {/* Tabela de Turmas */}
           <div className="rounded-2xl border overflow-hidden">
             <Table>
               <TableHeader>
@@ -343,7 +312,6 @@ const CoordinatorClasses = () => {
                   <TableHead>Curso</TableHead>
                   <TableHead>Semestre</TableHead>
                   <TableHead>Turno</TableHead>
-                  <TableHead>Alunos</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -353,24 +321,18 @@ const CoordinatorClasses = () => {
                 {filteredClasses.length > 0 ? (
                   filteredClasses.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell>
-                        <div className="font-medium">{item.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          Código: {item.code}
-                        </div>
+                      <TableCell className="font-medium text-slate-800">
+                        {item.code}
                       </TableCell>
                       <TableCell>{item.courseName}</TableCell>
                       <TableCell>{item.semester}</TableCell>
                       <TableCell>{item.shift}</TableCell>
                       <TableCell>
-                        {item.students}/{item.vacancies}
-                      </TableCell>
-                      <TableCell>
                         <Badge
                           className={
                             item.status === "ativa"
-                              ? "bg-emerald-500 text-white"
-                              : "bg-slate-500 text-white"
+                              ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                              : "bg-slate-500 hover:bg-slate-600 text-white"
                           }
                         >
                           {item.status}
@@ -398,7 +360,7 @@ const CoordinatorClasses = () => {
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={6}
                       className="text-center py-8 text-muted-foreground"
                     >
                       Nenhuma turma encontrada
@@ -411,6 +373,7 @@ const CoordinatorClasses = () => {
         </CardContent>
       </Card>
 
+      {/* Modal de Cadastro/Edição */}
       <Dialog
         open={dialogOpen}
         onOpenChange={(open) => {
@@ -418,37 +381,15 @@ const CoordinatorClasses = () => {
           if (!open) resetForm();
         }}
       >
-        <DialogContent className="sm:max-w-[620px]">
+        <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>
               {isEditing ? "Editar Turma" : "Cadastrar Turma"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="grid gap-4 py-2 md:grid-cols-2">
+          <div className="grid gap-5 py-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
-              <Label>Nome da Turma</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
-                }
-                placeholder="Ex: Turma A - 2026.1"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Código</Label>
-              <Input
-                value={formData.code}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, code: e.target.value }))
-                }
-                placeholder="Ex: ES-A26"
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label>Curso</Label>
               <Select
                 value={formData.courseId}
@@ -467,6 +408,17 @@ const CoordinatorClasses = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Turma</Label>
+              <Input
+                value={formData.code}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, code: e.target.value }))
+                }
+                placeholder="Ex: TADS044"
+              />
             </div>
 
             <div className="space-y-2">
@@ -500,28 +452,6 @@ const CoordinatorClasses = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Vagas</Label>
-              <Input
-                type="number"
-                value={formData.vacancies}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, vacancies: e.target.value }))
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Quantidade de Alunos</Label>
-              <Input
-                type="number"
-                value={formData.students}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, students: e.target.value }))
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label>Status</Label>
               <Select
                 value={formData.status}
@@ -541,13 +471,14 @@ const CoordinatorClasses = () => {
           </div>
 
           <DialogFooter>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} className="w-full sm:w-auto">
               {isEditing ? "Salvar Alterações" : "Cadastrar Turma"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Modal de Exclusão */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -556,7 +487,7 @@ const CoordinatorClasses = () => {
 
           <p>
             Tem certeza que deseja remover a turma{" "}
-            <strong>{selectedClass?.name}</strong>?
+            <strong>{selectedClass?.code}</strong>?
           </p>
 
           <DialogFooter>
