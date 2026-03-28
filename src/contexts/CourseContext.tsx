@@ -14,8 +14,7 @@ const initialCourses = [
    categorias: {
      Ensino: { limite: 100, aprovadas: 80 },
      Pesquisa: { limite: 60, aprovadas: 20 },
-     Extensao: { limite: 40, aprovadas: 10 },
-     Cultural: { limite: 20, aprovadas: 10 }
+     Extensao: { limite: 40, aprovadas: 10 }
    }
  },
  { 
@@ -23,8 +22,7 @@ const initialCourses = [
    categorias: {
      Ensino: { limite: 80, aprovadas: 20 },
      Pesquisa: { limite: 40, aprovadas: 10 },
-     Extensao: { limite: 30, aprovadas: 10 },
-     Cultural: { limite: 10, aprovadas: 5 }
+     Extensao: { limite: 30, aprovadas: 10 }
    }
  },
 ];

@@ -27,22 +27,22 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-//  MODIFICAÇÃO 1: Importando o hook
+// MODIFICAÇÃO 1: Importando o hook
 import { useCourse } from "@/contexts/CourseContext";
 
-//  IMPORTAÇÃO DA BIBLIOTECA DE RECORTAR IMAGENS
+// IMPORTAÇÃO DA BIBLIOTECA DE RECORTAR IMAGENS
 import ReactCrop, { type Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 
+// ✅ Categoria Cultural removida
 const categoryLabels: Record<string, string> = {
   pesquisa: "Pesquisa",
   extensao: "Extensão",
   ensino: "Ensino",
-  cultural: "Cultural",
 };
 
 const StudentSubmission = () => {
-  //  MODIFICAÇÃO 2: Puxando o curso ativo do contexto
+  // MODIFICAÇÃO 2: Puxando o curso ativo do contexto
   const { activeCourse } = useCourse();
 
   const [titulo, setTitulo] = useState("");
@@ -280,11 +280,11 @@ const StudentSubmission = () => {
     const cursoAtual = activeCourse as any;
 
     if (cursoAtual.categorias) {
+      // ✅ Categoria Cultural removida do keyMap
       const keyMap: Record<string, string> = {
         ensino: "Ensino",
         pesquisa: "Pesquisa",
         extensao: "Extensao",
-        cultural: "Cultural",
       };
 
       const catKey = keyMap[categoria];
@@ -402,7 +402,7 @@ const StudentSubmission = () => {
 
   return (
     <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6 relative">
-       {/* Cabeçalho */}
+      {/* Cabeçalho */}
       <div>
         <h1
           className="text-3xl sm:text-4xl font-bold text-slate-900"
@@ -448,15 +448,15 @@ const StudentSubmission = () => {
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
+                      {/* ✅ Categoria Cultural removida das opções */}
                       <SelectItem value="pesquisa">Pesquisa</SelectItem>
                       <SelectItem value="extensao">Extensão</SelectItem>
                       <SelectItem value="ensino">Ensino</SelectItem>
-                      <SelectItem value="cultural">Cultural</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* ✅ MODIFICAÇÃO: Trocado Data de Início por Semestre */}
+                {/*  MODIFICAÇÃO: Trocado Data de Início por Semestre */}
                 <div className="lg:col-span-4 space-y-2">
                   <Label htmlFor="semestre" className="text-slate-700 font-medium">
                     Semestre *
@@ -682,7 +682,7 @@ const StudentSubmission = () => {
         </div>
       </div>
 
-      {/*  MODAL DE EDIÇÃO DE IMAGEM COM A BIBLIOTECA DE CROP */}
+      {/* MODAL DE EDIÇÃO DE IMAGEM COM A BIBLIOTECA DE CROP */}
       {isCropModalOpen && previewSrc &&
         createPortal(
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
