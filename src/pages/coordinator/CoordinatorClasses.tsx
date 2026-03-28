@@ -232,7 +232,8 @@ const CoordinatorClasses = () => {
   };
 
   return (
-    <div className="space-y-6">
+    // ✅ MODIFICAÇÃO: Aqui está o container atualizado para padronizar com o resto do painel
+    <div className="p-8 space-y-6 bg-slate-50 min-h-[calc(100vh-4rem)]">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold">Minhas Turmas</h1>
