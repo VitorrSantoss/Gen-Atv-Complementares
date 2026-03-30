@@ -26,19 +26,16 @@ const roles = [
     value: "aluno",
     label: "Aluno",
     icon: <GraduationCap className="h-5 w-5" />,
-    desc: "Submeta certificados e acompanhe suas horas",
   },
   {
     value: "coordenador",
     label: "Coordenador",
     icon: <Users className="h-5 w-5" />,
-    desc: "Gerencie alunos e valide atividades",
   },
   {
     value: "superadmin",
-    label: "Super Admin",
+    label: "Gestor",
     icon: <Shield className="h-5 w-5" />,
-    desc: "Administre cursos e coordenadores",
   },
 ] as const;
 
@@ -53,19 +50,44 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(email, password, selectedRole);
-    navigate(roleRedirects[selectedRole]);
+    setErrorMessage("");
+    setLoading(true);
+
+    try {
+      const realRole = await login(email, password);
+
+      if (realRole !== selectedRole) {
+        logout();
+        setErrorMessage(
+          `Este usuário pertence ao perfil "${roles.find((r) => r.value === realRole)?.label}", não ao perfil selecionado.`
+        );
+        return;
+      }
+
+      navigate(roleRedirects[realRole]);
+    } catch (error: any) {
+      if (error?.response?.status === 401) {
+        setErrorMessage("E-mail ou senha inválidos.");
+      } else if (error?.response?.status === 403) {
+        setErrorMessage("Você não tem permissão para acessar o sistema.");
+      } else {
+        setErrorMessage("Não foi possível fazer login. Tente novamente.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex">
-      {/* Left - Hero */}
       <div className="hidden lg:flex lg:w-1/2 gradient-hero items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0 opacity-55">
           <div className="absolute top-20 left-20 w-[600px] h-[200px] rounded-full bg-primary blur-[120px]" />
@@ -83,10 +105,8 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Right - Form Container */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
-          {/* Cabeçalho centralizado com o GraduationCap */}
           <div className="flex flex-col items-center text-center">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 mb-4">
               <GraduationCap className="h-7 w-7 text-primary" />
@@ -101,7 +121,6 @@ const Login = () => {
             </p>
           </div>
 
-          {/* SELECT */}
           <div className="space-y-2">
             <Label>Tipo de usuário</Label>
 
@@ -137,11 +156,11 @@ const Login = () => {
             </Select>
           </div>
 
-          {/* FORM */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label>E-mail</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input
+                id="email"
                 type="email"
                 placeholder="Digite seu email"
                 value={email}
@@ -151,10 +170,11 @@ const Login = () => {
             </div>
 
             <div>
-              <Label>Senha</Label>
+              <Label htmlFor="password">Senha</Label>
 
               <div className="relative">
                 <Input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••"
                   value={password}
@@ -178,12 +198,19 @@ const Login = () => {
               </div>
             </div>
 
+            {errorMessage && (
+              <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600">
+                {errorMessage}
+              </div>
+            )}
 
-
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={loading}>
               <LogIn className="mr-2 h-5 w-5" />
-              Entrar como {roles.find((r) => r.value === selectedRole)?.label}
+              {loading
+                ? "Entrando..."
+                : `Entrar como ${roles.find((r) => r.value === selectedRole)?.label}`}
             </Button>
+
             <div className="text-center">
               <Link
                 to="/esqueci-senha"
