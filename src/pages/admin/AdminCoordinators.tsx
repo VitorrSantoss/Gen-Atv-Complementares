@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldCheck, UserPlus, Trash2, Loader2, BookOpen } from "lucide-react";
+import { UserPlus, Trash2, Pencil, Loader2, BookOpen } from "lucide-react";
 import { coordService, CoordCursoLink, CoordinatorUser } from "@/services/admin/coordService";
 import { courseService, CourseResponse } from "@/services/admin/courseService";
 
@@ -14,8 +14,12 @@ const AdminCoordinators = () => {
   const [availableCoords, setAvailableCoords] = useState<CoordinatorUser[]>([]);
   const [courses, setCourses] = useState<CourseResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
+  // Controle do Modal
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  
+  // Controle dos Selects
   const [selectedCoord, setSelectedCoord] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
   const { toast } = useToast();
@@ -40,17 +44,56 @@ const AdminCoordinators = () => {
 
   useEffect(() => { loadData(); }, []);
 
-  const handleCreateBind = async () => {
-    if (!selectedCoord || !selectedCourse) return;
+  // Abre o modal para um NOVO vínculo
+  const handleOpenNew = () => {
+    setEditingId(null);
+    setSelectedCoord("");
+    setSelectedCourse("");
+    setIsDialogOpen(true);
+  };
+
+  // Abre o modal para EDITAR um vínculo existente
+  const handleOpenEdit = (v: CoordCursoLink) => {
+    setEditingId(v.id);
+    setSelectedCoord(v.coordenador?.id?.toString() || "");
+    setSelectedCourse(v.curso?.id?.toString() || "");
+    setIsDialogOpen(true);
+  };
+
+  // Lógica de Salvar (Criação ou Edição)
+  const handleSaveBind = async () => {
+    if (!selectedCoord || !selectedCourse) {
+      toast({ title: "Atenção", description: "Selecione o coordenador e o curso.", variant: "destructive" });
+      return;
+    }
+
     try {
-      await coordService.bind(Number(selectedCoord), Number(selectedCourse));
-      toast({ title: "Sucesso", description: "Acesso concedido ao coordenador." });
+      if (editingId) {
+        // Modo Edição: Compara com o original
+        const original = vinculos.find(v => v.id === editingId);
+        
+        if (original && original.curso?.id?.toString() === selectedCourse && original.coordenador?.id?.toString() === selectedCoord) {
+          setIsDialogOpen(false); // Nada mudou, apenas fecha
+          return;
+        }
+
+        // Cria o novo vínculo e deleta o antigo (Swap)
+        await coordService.bind(Number(selectedCoord), Number(selectedCourse));
+        await coordService.unbind(editingId);
+        toast({ title: "Atualizado", description: "Permissões atualizadas com sucesso." });
+        
+      } else {
+        // Modo Criação
+        await coordService.bind(Number(selectedCoord), Number(selectedCourse));
+        toast({ title: "Sucesso", description: "Acesso concedido ao coordenador." });
+      }
+      
       setIsDialogOpen(false);
       loadData();
     } catch (error: any) {
       toast({ 
-        title: "Erro ao vincular", 
-        description: error.response?.data || "Verifique se o vínculo já existe.", 
+        title: "Erro ao salvar", 
+        description: error.response?.data?.message || error.response?.data || "Verifique se o vínculo já existe.", 
         variant: "destructive" 
       });
     }
@@ -74,18 +117,21 @@ const AdminCoordinators = () => {
           <p className="text-muted-foreground">Controle quais coordenadores gerenciam cada curso.</p>
         </div>
 
+        {/* Botão de Novo Vínculo */}
+        <Button className="bg-primary text-white" onClick={handleOpenNew}>
+          <UserPlus className="mr-2 h-4 w-4" /> Vincular Coordenador
+        </Button>
+
+        {/* Modal Único para Criar e Editar */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary text-white">
-              <UserPlus className="mr-2 h-4 w-4" /> Vincular Coordenador
-            </Button>
-          </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Novo Vínculo de Curso</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>{editingId ? "Editar Vínculo" : "Novo Vínculo de Curso"}</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Coordenador</label>
-                <Select onValueChange={setSelectedCoord}>
+                <Select value={selectedCoord} onValueChange={setSelectedCoord}>
                   <SelectTrigger><SelectValue placeholder="Selecione o usuário" /></SelectTrigger>
                   <SelectContent>
                     {availableCoords.map(c => (
@@ -96,7 +142,7 @@ const AdminCoordinators = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Curso</label>
-                <Select onValueChange={setSelectedCourse}>
+                <Select value={selectedCourse} onValueChange={setSelectedCourse}>
                   <SelectTrigger><SelectValue placeholder="Selecione o curso" /></SelectTrigger>
                   <SelectContent>
                     {courses.map(course => (
@@ -107,7 +153,9 @@ const AdminCoordinators = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleCreateBind} className="w-full">Confirmar Acesso</Button>
+              <Button onClick={handleSaveBind} className="w-full">
+                {editingId ? "Salvar Alterações" : "Confirmar Acesso"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -136,18 +184,33 @@ const AdminCoordinators = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        <BookOpen className="mr-2 h-3 w-3 text-slate-400" />
+                        <BookOpen className="mr-2 h-4 w-4 text-slate-400" />
                         {v.curso?.nome}
                       </div>
                     </TableCell>
-                    <TableCell><span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">{v.nivelAcesso}</span></TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteBind(v.id)} className="text-red-500 hover:text-red-700">
+                    <TableCell>
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                        {v.nivelAcesso}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      {/* Botão de Editar Adicionado */}
+                      <Button variant="outline" size="icon" onClick={() => handleOpenEdit(v)} className="text-blue-500 hover:text-blue-700">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="icon" onClick={() => handleDeleteBind(v.id)} className="text-red-500 hover:text-red-700">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
                 ))}
+                {vinculos.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                      Nenhum coordenador vinculado a cursos ainda.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           )}
