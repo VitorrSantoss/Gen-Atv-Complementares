@@ -21,7 +21,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Pencil, Trash2, UploadCloud, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { courseService, CourseResponse } from "@/services/courseService";
+import { courseService, CourseResponse } from "@/services/admin/courseService";
 
 const availableCoordinators = [
   "Prof. Maria Silva",
