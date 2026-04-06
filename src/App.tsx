@@ -14,7 +14,8 @@ import AdminLayout from "./components/layout/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminCoordinators from "./pages/admin/AdminCoordinators";
-import AdminClasses from "./pages/admin/AdminClasses"; // ✅ Importando a página de turmas do Admin
+import AdminClasses from "./pages/admin/AdminClasses";
+import AdminUsers from "./pages/admin/AdminUsers"; // ✅ Importando a Nova Tela de Usuários
 
 import CoordinatorLayout from "./components/layout/CoordinatorLayout";
 import CoordinatorDashboard from "./pages/coordinator/CoordinatorDashboard";
@@ -27,7 +28,7 @@ import StudentLayout from "./components/layout/StudentLayout";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import StudentSubmission from "./pages/student/StudentSubmission";
 import StudentNotifications from "./pages/student/StudentNotifications";
-import StudentRules from "./pages/student/StudentRules"; // Importando a nova página de regras para os alunos
+import StudentRules from "./pages/student/StudentRules";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +84,7 @@ const AppRoutes = () => {
         }
       />
 
+      {/* ROTAS DO SUPER ADMIN */}
       <Route
         path="/admin"
         element={
@@ -93,10 +95,12 @@ const AppRoutes = () => {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="cursos" element={<AdminCourses />} />
-        <Route path="turmas" element={<AdminClasses />} /> {/* ✅ Nova rota adicionada para gestão de turmas (Super Admin) */}
+        <Route path="turmas" element={<AdminClasses />} />
         <Route path="coordenadores" element={<AdminCoordinators />} />
+        <Route path="usuarios" element={<AdminUsers />} /> {/* ✅ Rota de Usuários Adicionada */}
       </Route>
 
+      {/* ROTAS DO COORDENADOR */}
       <Route
         path="/coordenador"
         element={
@@ -112,6 +116,7 @@ const AppRoutes = () => {
         <Route path="solicitacoes" element={<CoordinatorSubmissions />} />
       </Route>
 
+      {/* ROTAS DO ALUNO */}
       <Route
         path="/aluno"
         element={
@@ -122,7 +127,7 @@ const AppRoutes = () => {
       >
         <Route index element={<StudentDashboard />} />
         <Route path="submissao" element={<StudentSubmission />} />
-        <Route path="regras" element={<StudentRules />} /> {/* Nova rota adicionada com as regras para os alunos */}
+        <Route path="regras" element={<StudentRules />} />
         <Route path="notificacoes" element={<StudentNotifications />} />
       </Route>
 
