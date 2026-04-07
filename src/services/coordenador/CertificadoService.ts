@@ -1,18 +1,21 @@
 import { api } from "@/lib/api";
 
-// 1. Ajustado para bater com o SubmissaoResponseDTO do Java
+// 1. Interface atualizada para refletir o SubmissaoResponseDTO do Java
 export interface SubmissaoResponse {
   id: number;
   titulo: string;
   descricao: string;
   horas: number;
-  status: "PENDENTE" | "APROVADA" | "REPROVADA"; // Ajustado para os nomes do seu Enum no Java
+  // O status deve bater exatamente com o Enum StatusSubmissao do Java
+  status: "PENDENTE" | "APROVADA" | "REPROVADA"; 
   feedback?: string;
   dataSubmissao: string;
   alunoNome: string;
   cursoNome: string;
+  turmaNome: string; // Campo integrado para exibir a turma do aluno
+  coordenadorNome?: string; // Nome do coordenador que avaliou
   
-  // No Java enviamos um Set de certificados, pegamos o primeiro para a URL
+  // Lista de certificados vinculados à submissão
   certificados: {
     id: number;
     nomeArquivo: string;
@@ -21,25 +24,27 @@ export interface SubmissaoResponse {
 }
 
 export const certificadoService = {
-  // 2. Mudamos de /certificados para /submissoes
+  // Busca todas as submissões (usando o endpoint do SubmissaoController)
   async getAll(): Promise<SubmissaoResponse[]> {
     const response = await api.get<SubmissaoResponse[]>("/submissoes");
     return response.data;
   },
 
+  // Busca uma submissão específica por ID
   async getById(id: number): Promise<SubmissaoResponse> {
     const response = await api.get<SubmissaoResponse>(`/submissoes/${id}`);
     return response.data;
   },
 
-  // 3. Ajustado para as rotas que você tem no SubmissaoService do Java
+  // Método para aprovar a submissão via PATCH
   async aprovar(id: number): Promise<void> {
-    // Se você criou o endpoint @PatchMapping("/{id}/aprovar") no SubmissaoController:
+    // Certifique-se de que o PatchMapping exist no SubmissaoController do Java
     await api.patch(`/submissoes/${id}/aprovar`);
   },
 
+  // Método para rejeitar a submissão via PATCH
   async rejeitar(id: number): Promise<void> {
-    // Se você criou o endpoint @PatchMapping("/{id}/rejeitar") no SubmissaoController:
+    // Certifique-se de que o PatchMapping existe no SubmissaoController do Java
     await api.patch(`/submissoes/${id}/rejeitar`);
   }
 };
