@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -24,7 +24,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import {
   Plus,
   Search,
@@ -33,6 +32,7 @@ import {
   Edit2,
   Trash2,
   Filter,
+  Loader2,
 } from "lucide-react";
 import {
   Select,
@@ -41,339 +41,193 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { alunoService, AlunoResponse } from "@/services/coordenador/AlunoService";
+import { courseService, CourseResponse } from "@/services/admin/courseService";
 
-// --- TIPAGENS ---
-interface Student {
-  id: string;
-  name: string;
-  cpf: string;
-  turma: string;
-  curso: string;
-  turno: string;
-  statusAluno: string;
-  horasAprovadas: number;
-  meta: number;
-}
-
-// --- CONSTANTES ---
-const COURSES = ["Moda", "Gastronomia", "ADS", "Jogos", "Administração"];
-const TURMAS = ["T1", "T2", "T3", "T4", "T5"];
-const STATUS_ALUNO = [
-  "Matriculado",
-  "Trancado",
-  "Evadido",
-  "Transferido",
-  "Concluinte",
-  "Inativo",
-];
-
-const statusColors: Record<string, string> = {
-  Matriculado: "bg-blue-100 text-blue-700 hover:bg-blue-200",
-  Trancado: "bg-amber-100 text-amber-700 hover:bg-amber-200",
-  Evadido: "bg-red-100 text-red-700 hover:bg-red-200",
-  Transferido: "bg-slate-200 text-slate-700 hover:bg-slate-300",
-  Concluinte: "bg-emerald-100 text-emerald-700 hover:bg-emerald-200",
-  Inativo: "bg-gray-200 text-gray-600 hover:bg-gray-300",
-};
-
-const initialStudents: Student[] = [
-  {
-    id: "1",
-    name: "João Santos",
-    cpf: "111.222.333-44",
-    turma: "T1",
-    curso: "ADS",
-    turno: "Manhã",
-    statusAluno: "Matriculado",
-    horasAprovadas: 120,
-    meta: 200,
-  },
-  {
-    id: "2",
-    name: "Ana Oliveira",
-    cpf: "555.666.777-88",
-    turma: "T2",
-    curso: "Moda",
-    turno: "Tarde",
-    statusAluno: "Matriculado",
-    horasAprovadas: 180,
-    meta: 200,
-  },
-  {
-    id: "3",
-    name: "Carlos Lima",
-    cpf: "999.000.111-22",
-    turma: "T1",
-    curso: "ADS",
-    turno: "Noite",
-    statusAluno: "Trancado",
-    horasAprovadas: 50,
-    meta: 200,
-  },
-  {
-    id: "4",
-    name: "Maria Fernandes",
-    cpf: "333.444.555-66",
-    turma: "T3",
-    curso: "Jogos",
-    turno: "Manhã",
-    statusAluno: "Concluinte",
-    horasAprovadas: 200,
-    meta: 200,
-  },
-  {
-    id: "5",
-    name: "Ricardo Souza",
-    cpf: "222.333.444-55",
-    turma: "T2",
-    curso: "Gastronomia",
-    turno: "Noite",
-    statusAluno: "Transferido",
-    horasAprovadas: 90,
-    meta: 200,
-  },
-  {
-    id: "6",
-    name: "Beatriz Costa",
-    cpf: "123.456.789-00",
-    turma: "T1",
-    curso: "ADS",
-    turno: "Manhã",
-    statusAluno: "Evadido",
-    horasAprovadas: 10,
-    meta: 200,
-  },
-];
-
-const initialNewStudentState = {
-  name: "",
-  cpf: "",
-  turma: "",
-  curso: "",
-  turno: "",
-  statusAluno: "Matriculado",
-};
-
-// --- COMPONENTE COMPARTILHADO: FORMULÁRIO DE ALUNO ---
-// Evita duplicação de código entre o modal de Criação e de Edição
-const StudentFormFields = ({
-  student,
-  onChange,
-}: {
-  student: Partial<Student>;
-  onChange: (field: string, value: string) => void;
-}) => (
-  <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pl-[5px] pr-2">
-    <div className="grid gap-2">
-      <Label>Nome Completo</Label>
-      <Input
-        value={student.name || ""}
-        onChange={(e) => onChange("name", e.target.value)}
-        required
-      />
-    </div>
-
-    <div className="grid grid-cols-2 gap-4">
-      <div className="grid gap-2">
-        <Label>CPF</Label>
-        <Input
-          placeholder="000.000.000-00"
-          value={student.cpf || ""}
-          onChange={(e) => onChange("cpf", e.target.value)}
-          required
-        />
-      </div>
-      <div className="grid gap-2">
-        <Label>Turma</Label>
-        <Select
-          value={student.turma}
-          onValueChange={(v) => onChange("turma", v)}
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione" />
-          </SelectTrigger>
-          <SelectContent>
-            {TURMAS.map((t) => (
-              <SelectItem key={t} value={t}>
-                {t}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-
-    <div className="grid grid-cols-2 gap-4">
-      <div className="grid gap-2">
-        <Label>Curso</Label>
-        <Select
-          value={student.curso}
-          onValueChange={(v) => onChange("curso", v)}
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione" />
-          </SelectTrigger>
-          <SelectContent>
-            {COURSES.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="grid gap-2">
-        <Label>Turno</Label>
-        <Select
-          value={student.turno}
-          onValueChange={(v) => onChange("turno", v)}
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Manhã">Manhã</SelectItem>
-            <SelectItem value="Tarde">Tarde</SelectItem>
-            <SelectItem value="Noite">Noite</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-
-    <div className="grid gap-2">
-      <Label>Status da Matrícula</Label>
-      <Select
-        value={student.statusAluno}
-        onValueChange={(v) => onChange("statusAluno", v)}
-        required
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Selecione o status" />
-        </SelectTrigger>
-        <SelectContent>
-          {STATUS_ALUNO.map((status) => (
-            <SelectItem key={status} value={status}>
-              {status}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  </div>
-);
-
-// --- COMPONENTE PRINCIPAL ---
 const CoordinatorStudents = () => {
-  // Estados de Listagem
-  const [students, setStudents] = useState<Student[]>(initialStudents);
+  // Ajustado: Usando diretamente AlunoResponse
+  const [alunos, setAlunos] = useState<AlunoResponse[]>([]);
+  const [courses, setCourses] = useState<CourseResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Filtros e paginação
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("todos");
-  const [statusFilter, setStatusFilter] = useState("todos");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 8;
 
-  // Estados de Modais
+  // Controle dos modais
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  
+  // Ajustado: Usando diretamente AlunoResponse
+  const [selectedAluno, setSelectedAluno] = useState<AlunoResponse | null>(null);
 
-  // Estados de Formulário
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [newStudent, setNewStudent] = useState(initialNewStudentState);
+  // Form de criação
+  const [newForm, setNewForm] = useState({
+    email: "",
+    matricula: "",
+    cursoId: "",
+  });
 
-  // --- HANDLERS (AÇÕES) ---
-  const handleAddStudent = (e: React.FormEvent) => {
-    e.preventDefault();
-    const studentToAdd: Student = {
-      ...(newStudent as Student),
-      id: Math.random().toString(36).substring(2, 9),
-      horasAprovadas: 0,
-      meta: 200,
-    };
-    setStudents([studentToAdd, ...students]);
-    setNewStudent(initialNewStudentState);
-    setDialogOpen(false);
-  };
+  // Form de edição
+  const [editForm, setEditForm] = useState({
+    email: "",
+    matricula: "",
+    cursoId: "",
+  });
 
-  const handleEditStudent = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedStudent) return;
-    setStudents(
-      students.map((s) => (s.id === selectedStudent.id ? selectedStudent : s)),
-    );
-    setEditDialogOpen(false);
-    setSelectedStudent(null);
-  };
+  const { toast } = useToast();
 
-  const confirmDelete = () => {
-    if (selectedStudent) {
-      setStudents(
-        students.map((s) =>
-          s.id === selectedStudent.id ? { ...s, statusAluno: "Inativo" } : s,
-        ),
-      );
-      setDeleteDialogOpen(false);
-      setSelectedStudent(null);
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const [alunosData, cursosData] = await Promise.all([
+        alunoService.getAll(),
+        courseService.getAll(),
+      ]);
+      setAlunos(alunosData);
+      setCourses(cursosData);
+    } catch (error) {
+      toast({
+        title: "Erro ao carregar",
+        description: "Verifique se o back-end está rodando.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleNewStudentChange = (field: string, value: string) => {
-    setNewStudent((prev) => ({ ...prev, [field]: value }));
-  };
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  const handleEditStudentChange = (field: string, value: string) => {
-    setSelectedStudent((prev) => (prev ? { ...prev, [field]: value } : null));
-  };
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, courseFilter]);
 
-  // --- MEMOIZATION (Performance) ---
   const filtered = useMemo(() => {
-    return students.filter((s) => {
+    return alunos.filter((a) => {
       const matchesCourse =
-        courseFilter === "todos" || s.curso === courseFilter;
-      const matchesStatus =
-        statusFilter === "todos" || s.statusAluno === statusFilter;
+        courseFilter === "todos" ||
+        String(a.cursoId) === courseFilter;
 
-      if (!search) return matchesCourse && matchesStatus;
+      const term = search.toLowerCase();
+      const matchesSearch =
+        !search ||
+        (a.email?.toLowerCase().includes(term) ?? false) ||
+        (a.matricula?.toLowerCase().includes(term) ?? false);
 
-      const term = search
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
-      const searchDigits = search.replace(/\D/g, "");
-      const matchesName = s.name
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .includes(term);
-      const matchesCpf =
-        searchDigits.length > 0 &&
-        s.cpf.replace(/\D/g, "").includes(searchDigits);
-
-      return (matchesName || matchesCpf) && matchesCourse && matchesStatus;
+      return matchesCourse && matchesSearch;
     });
-  }, [students, search, courseFilter, statusFilter]);
+  }, [alunos, search, courseFilter]);
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const currentStudents = useMemo(() => {
-    return filtered.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage,
-    );
-  }, [filtered, currentPage]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const currentAlunos = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-  // --- RENDERIZAÇÃO ---
+  const getCourseNameById = (id: number | null) => {
+    if (!id) return "—";
+    return courses.find((c) => c.id === id)?.nome ?? `Curso #${id}`;
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newForm.email || !newForm.matricula || !newForm.cursoId) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha e-mail, matrícula e curso.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      await alunoService.create({
+        email: newForm.email,
+        matricula: newForm.matricula,
+        cursoId: Number(newForm.cursoId),
+      });
+      toast({ title: "Aluno cadastrado com sucesso!" });
+      setDialogOpen(false);
+      setNewForm({ email: "", matricula: "", cursoId: "" });
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao cadastrar",
+        description:
+          error?.response?.data?.message ?? "Verifique os dados e tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedAluno) return;
+    try {
+      await alunoService.update(selectedAluno.usuarioId, {
+        email: editForm.email,
+        matricula: editForm.matricula,
+        cursoId: Number(editForm.cursoId),
+      });
+      toast({ title: "Aluno atualizado com sucesso!" });
+      setEditDialogOpen(false);
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao atualizar",
+        description: error?.response?.data?.message ?? "Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedAluno) return;
+    try {
+      await alunoService.delete(selectedAluno.usuarioId);
+      toast({ title: "Aluno removido com sucesso." });
+      setDeleteDialogOpen(false);
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao remover",
+        description: error?.response?.data?.message ?? "Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Ajustado: Tipagem para AlunoResponse
+  const openEdit = (aluno: AlunoResponse) => {
+    setSelectedAluno(aluno);
+    setEditForm({
+      email: aluno.email ?? "",
+      matricula: aluno.matricula ?? "",
+      cursoId: aluno.cursoId ? String(aluno.cursoId) : "",
+    });
+    setEditDialogOpen(true);
+  };
+
+  // Ajustado: Tipagem para AlunoResponse
+  const openDelete = (aluno: AlunoResponse) => {
+    setSelectedAluno(aluno);
+    setDeleteDialogOpen(true);
+  };
+
   return (
-    <div className="overflow-hidden flex flex-col p-8 space-y-6 bg-slate-50 min-h-[calc(100vh-4rem)]">
-      <div className="flex justify-between items-start flex-shrink-0">
+    <div className="p-8 space-y-6 bg-slate-50 min-h-[calc(100vh-4rem)]">
+      {/* Cabeçalho */}
+      <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">
-            Gestão de Alunos
-          </h1>
+          <h1 className="text-3xl font-bold text-slate-800">Gestão de Alunos</h1>
           <p className="text-lg text-slate-500">
-            Cadastre e acompanhe os alunos do curso
+            Cadastre e acompanhe os alunos vinculados ao curso
           </p>
         </div>
 
@@ -384,16 +238,56 @@ const CoordinatorStudents = () => {
               <Plus className="h-4 w-4 mr-2" /> Novo Aluno
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[550px]">
+          <DialogContent className="sm:max-w-[480px]">
             <DialogHeader>
               <DialogTitle>Cadastrar Aluno</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleAddStudent}>
-              <StudentFormFields
-                student={newStudent}
-                onChange={handleNewStudentChange}
-              />
-              <Button type="submit" className="bg-blue-600 w-full mt-2">
+            <form onSubmit={handleCreate} className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label>E-mail do usuário *</Label>
+                <Input
+                  type="email"
+                  placeholder="aluno@email.com"
+                  value={newForm.email}
+                  onChange={(e) =>
+                    setNewForm((p) => ({ ...p, email: e.target.value }))
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  O usuário precisa estar cadastrado no sistema com perfil ALUNO.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Matrícula *</Label>
+                <Input
+                  placeholder="Ex: 20240001"
+                  value={newForm.matricula}
+                  onChange={(e) =>
+                    setNewForm((p) => ({ ...p, matricula: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Curso *</Label>
+                <Select
+                  value={newForm.cursoId}
+                  onValueChange={(v) =>
+                    setNewForm((p) => ({ ...p, cursoId: v }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o curso" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" className="w-full bg-blue-600 text-white mt-2">
                 Salvar Aluno
               </Button>
             </form>
@@ -402,14 +296,14 @@ const CoordinatorStudents = () => {
       </div>
 
       {/* Painel Principal */}
-      <Card className="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden flex flex-col w-full h-full min-h-[500px]">
-        {/* Cabeçalho com Filtros */}
-        <CardHeader className="p-4 border-b border-slate-100 flex-shrink-0">
+      <Card className="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
+        {/* Filtros */}
+        <CardHeader className="p-4 border-b border-slate-100">
           <div className="flex flex-col md:flex-row items-center gap-4 w-full">
             <div className="relative w-full md:w-[320px] shrink-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Buscar por nome ou CPF..."
+                placeholder="Buscar por e-mail ou matrícula..."
                 className="pl-10 bg-slate-50 border-slate-200 w-full"
                 value={search}
                 onChange={(e) => {
@@ -419,7 +313,7 @@ const CoordinatorStudents = () => {
               />
             </div>
 
-            <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full md:w-auto">
+            <div className="flex gap-2 w-full md:w-auto">
               <Select
                 value={courseFilter}
                 onValueChange={(v) => {
@@ -427,36 +321,15 @@ const CoordinatorStudents = () => {
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger className="w-full sm:w-[180px] bg-slate-50">
+                <SelectTrigger className="w-full sm:w-[220px] bg-slate-50">
                   <Filter className="h-4 w-4 mr-2 text-slate-400 shrink-0" />
                   <SelectValue placeholder="Curso" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos os Cursos</SelectItem>
-                  {COURSES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={statusFilter}
-                onValueChange={(v) => {
-                  setStatusFilter(v);
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-[180px] bg-slate-50">
-                  <Filter className="h-4 w-4 mr-2 text-slate-400 shrink-0" />
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os Status</SelectItem>
-                  {STATUS_ALUNO.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status}
+                  {courses.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -466,82 +339,39 @@ const CoordinatorStudents = () => {
         </CardHeader>
 
         {/* Tabela */}
-        <CardContent className="p-0 flex-1 overflow-auto">
-          <Table>
-            <TableHeader className="bg-slate-50/50 sticky top-0 z-10">
-              <TableRow className="hover:bg-transparent border-b border-slate-100">
-                <TableHead className="text-slate-500 font-medium whitespace-nowrap">
-                  Nome / CPF
-                </TableHead>
-                <TableHead className="text-slate-500 font-medium whitespace-nowrap">
-                  Curso / Turma
-                </TableHead>
-                <TableHead className="text-center text-slate-500 font-medium whitespace-nowrap">
-                  Status
-                </TableHead>
-                <TableHead className="text-center text-slate-500 font-medium whitespace-nowrap">
-                  Progresso
-                </TableHead>
-                <TableHead className="text-center text-slate-500 font-medium whitespace-nowrap">
-                  Ações
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentStudents.map((s) => {
-                const pct = Math.round((s.horasAprovadas / s.meta) * 100);
-                return (
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="flex justify-center p-12">
+              <Loader2 className="animate-spin h-8 w-8 text-primary" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow className="hover:bg-transparent border-slate-100">
+                  <TableHead className="text-slate-500 font-medium">Matrícula</TableHead>
+                  <TableHead className="text-slate-500 font-medium">E-mail</TableHead>
+                  <TableHead className="text-slate-500 font-medium">Curso</TableHead>
+                  <TableHead className="text-center text-slate-500 font-medium">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {currentAlunos.map((a) => (
                   <TableRow
-                    key={s.id}
-                    className="border-b border-slate-100 last:border-0 h-16 transition-colors"
+                    key={a.usuarioId}
+                    className="border-b border-slate-100 last:border-0"
                   >
-                    <TableCell className="font-medium text-slate-700">
-                      <div className="flex flex-col items-start gap-0.5">
-                        <span className="font-semibold">{s.name}</span>
-                        <span className="text-[11px] text-slate-400 font-normal">
-                          CPF: {s.cpf}
-                        </span>
-                      </div>
+                    <TableCell className="font-semibold text-slate-700">
+                      {a.matricula}
                     </TableCell>
-
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-slate-600">
-                          {s.curso}
-                        </span>
-                        <span className="text-[11px] text-slate-400">
-                          {s.turma} • {s.turno || "N/A"}
-                        </span>
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="text-center">
-                      <Badge
-                        variant="secondary"
-                        className={`font-semibold border-0 ${statusColors[s.statusAluno] || "bg-slate-100 text-slate-700"}`}
-                      >
-                        {s.statusAluno}
-                      </Badge>
-                    </TableCell>
-
-                    <TableCell className="text-center">
-                      <Badge
-                        className={`rounded-full px-3 py-0.5 font-bold text-[10px] uppercase ${pct >= 100 ? "bg-emerald-500 hover:bg-emerald-600" : "bg-blue-600 hover:bg-blue-700"} text-white`}
-                      >
-                        {pct >= 100 ? "Completo" : `${pct}%`}
-                      </Badge>
-                    </TableCell>
-
+                    <TableCell className="text-slate-500">{a.email}</TableCell>
+                    <TableCell>{getCourseNameById(a.cursoId)}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-center gap-1">
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-slate-400 hover:bg-blue-50 hover:text-blue-600"
-                          onClick={() => {
-                            setSelectedStudent(s);
-                            setEditDialogOpen(true);
-                          }}
+                          onClick={() => openEdit(a)}
                         >
                           <Edit2 className="h-4 w-4" />
                         </Button>
@@ -549,36 +379,33 @@ const CoordinatorStudents = () => {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                          onClick={() => {
-                            setSelectedStudent(s);
-                            setDeleteDialogOpen(true);
-                          }}
+                          onClick={() => openDelete(a)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                );
-              })}
-
-              {currentStudents.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-32 text-center text-slate-500"
-                  >
-                    Nenhum aluno encontrado com os filtros atuais.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                ))}
+                {currentAlunos.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="h-32 text-center text-slate-500"
+                    >
+                      Nenhum aluno encontrado com os filtros atuais.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
 
-        <CardFooter className="flex items-center justify-between p-4 border-t border-slate-100 bg-slate-50/30 flex-shrink-0">
+        {/* Paginação */}
+        <CardFooter className="flex items-center justify-between p-4 border-t border-slate-100 bg-slate-50/30">
           <p className="text-sm text-slate-500 font-medium">
-            Página {currentPage} de {totalPages || 1}
+            Página {currentPage} de {totalPages} — {filtered.length} alunos
           </p>
           <div className="flex gap-2">
             <Button
@@ -594,7 +421,7 @@ const CoordinatorStudents = () => {
               variant="outline"
               size="icon"
               className="h-8 w-8 rounded-lg border-slate-200"
-              disabled={currentPage === totalPages || totalPages === 0}
+              disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => p + 1)}
             >
               <ChevronRight className="h-4 w-4" />
@@ -605,20 +432,52 @@ const CoordinatorStudents = () => {
 
       {/* Modal de Edição */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
+        <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
-            <DialogTitle>Editar Informações</DialogTitle>
+            <DialogTitle>Editar Aluno</DialogTitle>
           </DialogHeader>
-          {selectedStudent && (
-            <form onSubmit={handleEditStudent}>
-              <StudentFormFields
-                student={selectedStudent}
-                onChange={handleEditStudentChange}
-              />
-              <Button
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-700 w-full mt-2"
-              >
+          {selectedAluno && (
+            <form onSubmit={handleEdit} className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <Input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, email: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Matrícula</Label>
+                <Input
+                  value={editForm.matricula}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, matricula: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Curso</Label>
+                <Select
+                  value={editForm.cursoId}
+                  onValueChange={(v) =>
+                    setEditForm((p) => ({ ...p, cursoId: v }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o curso" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" className="w-full bg-blue-600 text-white mt-2">
                 Salvar Alterações
               </Button>
             </form>
@@ -626,26 +485,23 @@ const CoordinatorStudents = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de Inativação */}
+      {/* Modal de Exclusão */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle className="text-red-600">Inativar Aluno</DialogTitle>
+            <DialogTitle className="text-red-600">Remover Aluno</DialogTitle>
           </DialogHeader>
           <div className="py-4 text-slate-600">
-            Tem certeza que deseja inativar o aluno{" "}
-            <strong className="text-slate-800">{selectedStudent?.name}</strong>?
+            Tem certeza que deseja remover o aluno com matrícula{" "}
+            <strong>{selectedAluno?.matricula}</strong>?
           </div>
           <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Cancelar
             </Button>
             <Button
               className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={confirmDelete}
+              onClick={handleDelete}
             >
               Confirmar
             </Button>
