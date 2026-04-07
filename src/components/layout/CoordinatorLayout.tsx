@@ -13,7 +13,6 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-// Definição dos links de navegação do painel do coordenador
 const links = [
   { to: "/coordenador", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/coordenador/turmas", icon: GraduationCap, label: "Turmas" },
@@ -23,7 +22,7 @@ const links = [
 ];
 
 const CoordinatorLayout = () => {
-  const { user, logout } = useAuth(); // Acede ao utilizador e função de logout do contexto
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -36,12 +35,13 @@ const CoordinatorLayout = () => {
     <>
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+          {/* Restaurado: gradient-primary e text-primary-foreground */}
+          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
             CO
           </div>
           <div className="overflow-hidden">
             <p className="text-sm font-semibold text-sidebar-foreground truncate">
-              {/* Ajustado para user?.email porque a interface User só possui e-mail */}
+              {/* Mantido: user?.email (pois user?.name não existe no AuthContext) */}
               {user?.email}
             </p>
             <p className="text-xs text-sidebar-foreground/60">Coordenador</p>
@@ -59,7 +59,7 @@ const CoordinatorLayout = () => {
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                 isActive
-                  ? "bg-blue-50 text-blue-600" // Destaque para o link ativo
+                  ? "bg-sidebar-accent text-sidebar-primary" // Restaurado: Cores originais da sidebar
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
               }`
             }
@@ -85,12 +85,10 @@ const CoordinatorLayout = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Sidebar Desktop */}
       <aside className="hidden lg:flex lg:w-64 flex-col bg-sidebar fixed inset-y-0 z-30 border-r border-sidebar-border">
         <SidebarContent />
       </aside>
 
-      {/* Sidebar Mobile */}
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-40">
           <div
@@ -110,7 +108,6 @@ const CoordinatorLayout = () => {
       )}
 
       <main className="flex-1 lg:ml-64">
-        {/* Header Mobile */}
         <header className="lg:hidden flex items-center gap-3 p-4 border-b border-border bg-card">
           <button onClick={() => setSidebarOpen(true)}>
             <Menu className="h-6 w-6 text-foreground" />
@@ -121,7 +118,7 @@ const CoordinatorLayout = () => {
         </header>
 
         <div className="p-6 lg:p-8">
-          <Outlet /> {/* Aqui serão renderizadas as páginas internas */}
+          <Outlet />
         </div>
       </main>
     </div>
