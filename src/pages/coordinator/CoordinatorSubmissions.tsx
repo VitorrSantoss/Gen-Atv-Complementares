@@ -6,9 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle, XCircle, Eye, FileText, Download, Pencil, MessageSquare, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Eye, FileText, Download, Pencil, MessageSquare, Loader2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-// Importamos a interface correta que definimos no service
 import { certificadoService, SubmissaoResponse } from "@/services/coordenador/CertificadoService";
 
 const CoordinatorSubmissions = () => {
@@ -41,7 +40,6 @@ const CoordinatorSubmissions = () => {
     loadData();
   }, []);
 
-  // Ajustado o tipo para SubmissaoResponse
   const openModal = (sub: SubmissaoResponse) => {
     setSelected(sub);
     setFeedback(sub.feedback || "");
@@ -50,7 +48,7 @@ const CoordinatorSubmissions = () => {
   const handleAction = async (id: number, status: "APROVADA" | "REPROVADA") => {
     try {
       if (status === "APROVADA") {
-        await certificadoService.aprovar(id); // Removido feedback se o service for Patch simples
+        await certificadoService.aprovar(id);
         toast({ title: "Atividade aprovada com sucesso!" });
       } else {
         await certificadoService.rejeitar(id);
@@ -71,7 +69,6 @@ const CoordinatorSubmissions = () => {
     }
   };
 
-  // 1. AJUSTE NOS STATUS: Devem ser iguais ao Enum do Java (APROVADA/REPROVADA)
   const statusBadges: Record<string, string> = {
     PENDENTE: "bg-orange-500/10 text-orange-600 border-0 font-bold uppercase text-[10px]",
     APROVADA: "bg-green-500 text-white border-0 font-bold uppercase text-[10px]",
@@ -81,7 +78,6 @@ const CoordinatorSubmissions = () => {
   const pendentes = submissions.filter((s) => s.status === "PENDENTE");
   const historico = submissions.filter((s) => s.status !== "PENDENTE");
 
-  // Função auxiliar para pegar a URL do primeiro certificado
   const getArquivoUrl = (sub: SubmissaoResponse) => {
     return sub.certificados && sub.certificados.length > 0 
       ? sub.certificados[0].urlArquivo 
@@ -92,7 +88,7 @@ const CoordinatorSubmissions = () => {
     <div className="flex flex-col p-8 space-y-6 bg-slate-50 min-h-screen">
       <div>
         <h1 className="text-3xl font-bold text-slate-800">Gerenciamento de Atividades</h1>
-        <p className="text-lg text-slate-500">Avaliação e histórico de devolutivas</p>
+        <p className="text-lg text-slate-500">Avaliação e histórico de devolutivas por turma</p>
       </div>
 
       {isLoading ? (
@@ -110,6 +106,7 @@ const CoordinatorSubmissions = () => {
                 <TableHeader className="bg-slate-50/50">
                   <TableRow className="hover:bg-transparent border-slate-100">
                     <TableHead className="px-6 font-bold text-slate-400 uppercase text-[11px]">Aluno</TableHead>
+                    <TableHead className="px-6 font-bold text-slate-400 uppercase text-[11px]">Turma</TableHead>
                     <TableHead className="px-6 font-bold text-slate-400 uppercase text-[11px]">Atividade</TableHead>
                     <TableHead className="px-6 font-bold text-slate-400 uppercase text-[11px]">Horas</TableHead>
                     <TableHead className="px-6 font-bold text-slate-400 uppercase text-[11px] text-right">Ações</TableHead>
@@ -119,6 +116,11 @@ const CoordinatorSubmissions = () => {
                   {pendentes.map((sub) => (
                     <TableRow key={sub.id} className="border-slate-50 hover:bg-slate-50/30">
                       <TableCell className="px-6 py-4 font-bold text-slate-700">{sub.alunoNome}</TableCell>
+                      <TableCell className="px-6 py-4">
+                        <Badge variant="outline" className="rounded-lg bg-blue-50/50 text-blue-600 border-blue-100 font-semibold uppercase text-[9px]">
+                          {sub.turmaNome}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="px-6 py-4 text-slate-600">{sub.titulo}</TableCell>
                       <TableCell className="px-6 py-4 font-medium">{sub.horas}h</TableCell>
                       <TableCell className="px-6 py-4 text-right">
@@ -131,23 +133,36 @@ const CoordinatorSubmissions = () => {
             </CardContent>
           </Card>
 
-          {/* HISTÓRICO */}
           <Card className="border-0 shadow-sm rounded-2xl bg-white overflow-hidden">
             <CardHeader className="border-b border-slate-50 p-6">
               <CardTitle className="text-lg font-bold text-slate-800">Histórico</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
+                <TableHeader className="bg-slate-50/50">
+                  <TableRow className="hover:bg-transparent border-slate-100">
+                    <TableHead className="px-6 font-bold text-slate-400 uppercase text-[11px]">Aluno / Turma</TableHead>
+                    <TableHead className="px-6 font-bold text-slate-400 uppercase text-[11px]">Status</TableHead>
+                    <TableHead className="px-6 font-bold text-slate-400 uppercase text-[11px]">Horas</TableHead>
+                    <TableHead className="px-6 font-bold text-slate-400 uppercase text-[11px] text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
                 <TableBody>
                   {historico.map((sub) => (
                     <TableRow key={sub.id} className="border-slate-50 hover:bg-slate-50/20">
                       <TableCell className="px-6 py-4">
-                        <p className="font-bold text-slate-700">{sub.alunoNome}</p>
-                        <p className="text-sm text-slate-500">{sub.titulo}</p>
+                        <div className="space-y-1">
+                          <p className="font-bold text-slate-700">{sub.alunoNome}</p>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[9px] h-4 px-1.5">{sub.turmaNome}</Badge>
+                            <span className="text-sm text-slate-500">{sub.titulo}</span>
+                          </div>
+                        </div>
                       </TableCell>
                       <TableCell className="px-6 py-4">
                         <Badge className={statusBadges[sub.status]}>{sub.status}</Badge>
                       </TableCell>
+                      <TableCell className="px-6 py-4 font-medium">{sub.horas}h</TableCell>
                       <TableCell className="px-6 py-4 text-right">
                          <Button variant="outline" size="icon" onClick={() => openModal(sub)} className="rounded-xl"><Pencil className="h-4 w-4" /></Button>
                       </TableCell>
@@ -160,7 +175,6 @@ const CoordinatorSubmissions = () => {
         </>
       )}
 
-      {/* MODAL DE ANÁLISE */}
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
         <DialogContent className="max-w-5xl h-[85vh] flex flex-col overflow-hidden rounded-3xl border-0 p-0">
           <DialogHeader className="p-6 border-b border-slate-100">
@@ -184,7 +198,6 @@ const CoordinatorSubmissions = () => {
                   </Button>
                 </div>
                 <div className="flex-1 border-2 border-slate-200 border-dashed rounded-2xl overflow-hidden bg-white shadow-inner">
-                   {/* 2. AJUSTE DA URL DO PDF: Pegando do primeiro certificado */}
                    <iframe src={getArquivoUrl(selected)} className="w-full h-full border-0" title="PDF Viewer" />
                 </div>
               </div>
@@ -196,8 +209,19 @@ const CoordinatorSubmissions = () => {
                     <p className="font-bold text-slate-800">{selected.alunoNome}</p>
                   </div>
                   <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Turma</span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <Users className="h-3.5 w-3.5 text-slate-400" />
+                      <p className="font-bold text-slate-800 text-sm">{selected.turmaNome}</p>
+                    </div>
+                  </div>
+                  <div>
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Status</span>
                     <div className="mt-1"><Badge className={statusBadges[selected.status]}>{selected.status}</Badge></div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Carga Horária</span>
+                    <p className="font-bold text-slate-800">{selected.horas}h</p>
                   </div>
                   <div className="col-span-2">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Atividade</span>
@@ -231,18 +255,16 @@ const CoordinatorSubmissions = () => {
         </DialogContent>
       </Dialog>
       
-      {/* MODAL DE CONFIRMAÇÃO DE REJEIÇÃO (SÓ EXEMPLO) */}
       <Dialog open={!!confirmRejectSub} onOpenChange={(open) => !open && setConfirmRejectSub(null)}>
         <DialogContent className="sm:max-w-[400px] rounded-2xl">
           <DialogHeader><DialogTitle className="text-red-600 font-bold">Confirmar Reprovação</DialogTitle></DialogHeader>
-          <p className="text-slate-600 text-sm">Deseja realmente reprovar a atividade?</p>
+          <p className="text-slate-600 text-sm">Deseja realmente reprovar esta atividade?</p>
           <DialogFooter className="mt-4 gap-2">
             <Button variant="outline" onClick={() => setConfirmRejectSub(null)}>Voltar</Button>
             <Button className="bg-red-600 text-white" onClick={() => confirmRejectSub && handleAction(confirmRejectSub.id, "REPROVADA")}>Sim, Reprovar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 };
