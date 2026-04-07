@@ -1,11 +1,19 @@
 import { api } from "@/lib/api";
 
+export interface ItemRegraAtividade {
+  id?: number;
+  descricao: string;
+  aproveitamento: string;
+  explicacao?: string;
+}
+
 export interface RegraAtividade {
   id: string;
   area: string;
   limiteHoras: number;
   exigeComprovante: boolean;
   cursoId: number;
+  itens: ItemRegraAtividade[];
 }
 
 export const regraService = {
