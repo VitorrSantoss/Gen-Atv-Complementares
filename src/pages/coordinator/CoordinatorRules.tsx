@@ -11,6 +11,7 @@ import {
   Target,
   Users,
   Loader2,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -30,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { regraService, RegraAtividade } from "@/services/coordenador/RegraService";
+import { regraService, RegraAtividade, ItemRegraAtividade } from "@/services/coordenador/RegraService";
 import { cursoService, CursoResponse } from "@/services/coordenador/CursoService";
 
 const colorPalettes = [
@@ -56,10 +57,13 @@ const CoordinatorRules = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ruleToDelete, setRuleToDelete] = useState<RegraAtividade | null>(null);
+  const [expandedItemKey, setExpandedItemKey] = useState<string | null>(null);
 
+  const emptyItem = { descricao: "", aproveitamento: "", explicacao: "" };
   const [formData, setFormData] = useState({
     id: "",
     area: "",
+    itens: [{ ...emptyItem }],
     limiteHoras: "",
     exigeComprovante: false
   });
@@ -86,6 +90,7 @@ const CoordinatorRules = () => {
     try {
       const payload = {
         area: formData.area,
+        itens: formData.itens.filter(item => item.descricao.trim() !== ""),
         limiteHoras: Number(formData.limiteHoras),
         exigeComprovante: formData.exigeComprovante,
         cursoId: Number(selectedCursoId)
@@ -150,7 +155,7 @@ const CoordinatorRules = () => {
              </Select>
           </div>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 rounded-xl px-6" onClick={() => { setIsEditing(false); setFormData({id: "", area: "", limiteHoras: "", exigeComprovante: false}); setDialogOpen(true); }}>
+        <Button className="bg-blue-600 hover:bg-blue-700 rounded-xl px-6" onClick={() => { setIsEditing(false); setFormData({id: "", area: "", itens: [{ ...emptyItem }], limiteHoras: "", exigeComprovante: false}); setDialogOpen(true); }}>
           <Plus className="h-4 w-4 mr-2" /> Nova Regra
         </Button>
       </div>
@@ -170,16 +175,58 @@ const CoordinatorRules = () => {
                     <div className={`p-2.5 rounded-xl ${palette.bgBadge}`}>{getIconForArea(rule.area)}</div>
                     <div>
                       <h3 className="font-bold text-slate-800 text-lg">{rule.area}</h3>
-                      <p className="text-xs text-slate-500">Limite de {rule.limiteHoras} horas por curso</p>
+                      <p className="text-xs text-slate-400">Limite de {rule.limiteHoras} horas por curso</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     {rule.exigeComprovante && <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">Exige Comprovante</Badge>}
-                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setIsEditing(true); setFormData({ id: rule.id, area: rule.area, limiteHoras: rule.limiteHoras.toString(), exigeComprovante: rule.exigeComprovante }); setDialogOpen(true); }}><Pencil className="h-4 w-4 text-slate-400" /></Button>
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setIsEditing(true); setFormData({ id: rule.id, area: rule.area, itens: rule.itens?.length ? rule.itens.map(i => ({ descricao: i.descricao, aproveitamento: i.aproveitamento, explicacao: i.explicacao || "" })) : [{ ...emptyItem }], limiteHoras: rule.limiteHoras.toString(), exigeComprovante: rule.exigeComprovante }); setDialogOpen(true); }}><Pencil className="h-4 w-4 text-slate-400" /></Button>
                     <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setRuleToDelete(rule); setDeleteDialogOpen(true); }}><Trash2 className="h-4 w-4 text-slate-400" /></Button>
                     <ChevronDown className={`h-5 w-5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                   </div>
                 </div>
+                {isExpanded && rule.itens?.length > 0 && (
+                  <div className="border-t border-slate-100 px-5 pb-5 pt-3">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-xs text-slate-400 uppercase tracking-wider">
+                          <th className="pb-2 font-medium w-8"></th>
+                          <th className="pb-2 font-medium">Descrição</th>
+                          <th className="pb-2 font-medium text-right">Aproveitamento</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {rule.itens.map((item, i) => {
+                          const itemKey = `${rule.id}-${i}`;
+                          const isItemExpanded = expandedItemKey === itemKey;
+                          return (
+                            <>
+                              <tr
+                                key={itemKey}
+                                className="cursor-pointer hover:bg-slate-50"
+                                onClick={() => setExpandedItemKey(isItemExpanded ? null : itemKey)}
+                              >
+                                <td className="py-2">
+                                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isItemExpanded ? "rotate-180" : ""}`} />
+                                </td>
+                                <td className="py-2 text-slate-600">{item.descricao}</td>
+                                <td className="py-2 text-slate-500 text-right">{item.aproveitamento}</td>
+                              </tr>
+                              {isItemExpanded && item.explicacao && (
+                                <tr key={`${itemKey}-exp`}>
+                                  <td></td>
+                                  <td colSpan={2} className="pb-3 pt-1 text-xs text-slate-500 italic">
+                                    {item.explicacao}
+                                  </td>
+                                </tr>
+                              )}
+                            </>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </Card>
             );
           })
@@ -194,6 +241,55 @@ const CoordinatorRules = () => {
             <div className="space-y-2">
               <Label>Área da Atividade</Label>
               <Input value={formData.area} onChange={(e) => setFormData({...formData, area: e.target.value})} placeholder="Ex: Pesquisa, Extensão, Ensino..." />
+            </div>
+            <div className="space-y-3">
+              <Label>Itens da Regra</Label>
+              {formData.itens.map((item, i) => (
+                <div key={i} className="space-y-2 rounded-lg border border-slate-200 p-3">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={item.descricao}
+                      onChange={(e) => {
+                        const novos = [...formData.itens];
+                        novos[i] = { ...novos[i], descricao: e.target.value };
+                        setFormData({...formData, itens: novos});
+                      }}
+                      placeholder="Descrição"
+                      className="flex-1"
+                    />
+                    <Input
+                      value={item.aproveitamento}
+                      onChange={(e) => {
+                        const novos = [...formData.itens];
+                        novos[i] = { ...novos[i], aproveitamento: e.target.value };
+                        setFormData({...formData, itens: novos});
+                      }}
+                      placeholder="Aproveitamento"
+                      className="w-[160px]"
+                    />
+                    {formData.itens.length > 1 && (
+                      <Button variant="ghost" size="icon" className="shrink-0" onClick={() => {
+                        setFormData({...formData, itens: formData.itens.filter((_, idx) => idx !== i)});
+                      }}>
+                        <X className="h-4 w-4 text-slate-400" />
+                      </Button>
+                    )}
+                  </div>
+                  <Input
+                    value={item.explicacao}
+                    onChange={(e) => {
+                      const novos = [...formData.itens];
+                      novos[i] = { ...novos[i], explicacao: e.target.value };
+                      setFormData({...formData, itens: novos});
+                    }}
+                    placeholder="Explicação (detalhes adicionais)"
+                    className="text-sm"
+                  />
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" className="mt-1" onClick={() => setFormData({...formData, itens: [...formData.itens, { ...emptyItem }]})}>
+                <Plus className="h-3 w-3 mr-1" /> Adicionar item
+              </Button>
             </div>
             <div className="space-y-2">
               <Label>Limite de Horas</Label>
