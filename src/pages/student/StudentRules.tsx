@@ -1,8 +1,4 @@
-// Regras do curso para os alunos, detalhando as atividades permitidas, 
-// limites de horas e requisitos de comprovação para cada área (Ensino, Pesquisa, Extensão).
-// Aqui foi removido o "adicionar, editar ou excluir regras".
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,387 +7,351 @@ import {
   BookOpen,
   Target,
   Users,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-interface Atividade {
-  id: string;
+import { useCourse } from "@/contexts/CourseContext";
+import { api } from "@/lib/api";
+
+// ─── Tipos (espelham RegraAtividade e ItemRegraAtividade do back-end) ─────────
+
+interface ItemRegra {
+  id: number;
   descricao: string;
   aproveitamento: string;
-  requisito: string;
+  explicacao?: string;
 }
 
-interface Rule {
+interface Regra {
   id: string;
   area: string;
-  maxHoras: number;
-  descricao: string;
-  cor: string;
-  bgBadge: string;
-  atividades: Atividade[];
+  limiteHoras: number;
+  exigeComprovante: boolean;
+  itens: ItemRegra[];
 }
 
-const initialRules: Rule[] = [
-  {
-    id: "1",
-    area: "Ensino",
-    maxHoras: 100,
-    descricao: "Monitorias, cursos extracurriculares, participacao como tutor.",
-    cor: "border-purple-500",
-    bgBadge: "bg-purple-100 text-purple-700",
-    atividades: [
-      {
-        id: "ens-1",
-        descricao: "Participação em monitoria no curso",
-        aproveitamento: "20h por semestre",
-        requisito: "Declaração e relatório das atividades",
-      },
-      {
-        id: "ens-2",
-        descricao: "Comparecimento a defesas de monografias (temas pertinentes)",
-        aproveitamento: "2h por participação",
-        requisito: "Relatório do evento e lista de presença",
-      },
-      {
-        id: "ens-3",
-        descricao: "Disciplina cursada em outros cursos da Faculdade Senac",
-        aproveitamento: "20h por disciplina",
-        requisito: "Histórico oficial",
-      },
-      {
-        id: "ens-4",
-        descricao: "Disciplinas cursadas fora da Faculdade Senac",
-        aproveitamento: "20h por disciplina",
-        requisito: "Histórico escolar e programa da disciplina",
-      },
-      {
-        id: "ens-5",
-        descricao: "Cursos instrumentais (informática e/ou língua estrangeira)",
-        aproveitamento: "10h por semestre",
-        requisito: "Declaração do curso e aprovação no módulo ou semestre",
-      },
-      {
-        id: "ens-6",
-        descricao: "Certificações reconhecidas da área",
-        aproveitamento: "10h por semestre",
-        requisito: "Declaração do curso",
-      },
-      {
-        id: "ens-7",
-        descricao: "Elaboração de material didático com supervisão do professor",
-        aproveitamento: "5h por material",
-        requisito: "Cópia do material",
-      },
-      {
-        id: "ens-8",
-        descricao: "Atividade extraclasse promovida como parte da formação do aluno",
-        aproveitamento: "10h por participação",
-        requisito: "Certificado de participação",
-      },
-      {
-        id: "ens-9",
-        descricao: "Visitas técnicas",
-        aproveitamento: "4h por visita",
-        requisito: "Documento do órgão/empresa e/ou comprovante de presença",
-      },
-    ],
-  },
-  {
-    id: "2",
-    area: "Pesquisa",
-    maxHoras: 90,
-    descricao: "Atividades vinculadas à Pesquisa.",
-    cor: "border-emerald-500",
-    bgBadge: "bg-emerald-100 text-emerald-700",
-    atividades: [
-      {
-        id: "pesq-1",
-        descricao: "Participação em pesquisas ou atividades de pesquisa",
-        aproveitamento: "10h por produto final publicado",
-        requisito: "Relatório do professor orientador",
-      },
-      {
-        id: "pesq-2",
-        descricao: "Programas de bolsa de Iniciação Científica",
-        aproveitamento: "20h por bolsa",
-        requisito: "Relatório do professor orientador",
-      },
-      {
-        id: "pesq-3",
-        descricao: "Publicações de artigos (revistas, periódicos, sites e congêneres)",
-        aproveitamento: "10h por produto publicado",
-        requisito: "Publicação",
-      },
-      {
-        id: "pesq-4",
-        descricao: "Publicação em livro na área",
-        aproveitamento: "40h por produto publicado",
-        requisito: "Livro publicado",
-      },
-      {
-        id: "pesq-5",
-        descricao: "Participação em programa especial de treinamento",
-        aproveitamento: "10h por semestre",
-        requisito: "Atestado ou certificado de participação",
-      },
-    ],
-  },
-  {
-    id: "3",
-    area: "Extensão",
-    maxHoras: 75,
-    descricao: "Atividades vinculadas à Extensão.",
-    cor: "border-orange-500",
-    bgBadge: "bg-orange-100 text-orange-700",
-    atividades: [
-      {
-        id: "ext-1",
-        descricao: "Participação em seminários, congressos, conferências e encontros",
-        aproveitamento: "10h por participação / 4h como público",
-        requisito: "Atestado ou certificado de participação",
-      },
-      {
-        id: "ext-2",
-        descricao: "Atendimento comunitário de cunho social",
-        aproveitamento: "10h por semestre",
-        requisito: "Atestado de participação",
-      },
-      {
-        id: "ext-3",
-        descricao: "Apresentação de trabalhos, concursos, exposições, painéis, mostras e congêneres",
-        aproveitamento: "10h pela apresentação",
-        requisito: "Trabalho apresentado",
-      },
-      {
-        id: "ext-4",
-        descricao: "Estágio extracurricular em entidades públicas ou privadas conveniadas com a Faculdade Senac",
-        aproveitamento: "20h por semestre",
-        requisito: "Declaração da instituição e apresentação de relatório de atividades",
-      },
-      {
-        id: "ext-5",
-        descricao: "Participação em órgãos colegiados da Faculdade Senac",
-        aproveitamento: "5h por semestre",
-        requisito: "Declaração da Direção ou do Presidente dos Conselhos",
-      },
-      {
-        id: "ext-6",
-        descricao: "Representação estudantil",
-        aproveitamento: "10h por semestre",
-        requisito: "Declaração da representação estudantil",
-      },
-      {
-        id: "ext-7",
-        descricao: "Cursos de extensão universitária (dentro ou fora da Faculdade Senac)",
-        aproveitamento: "10h por curso",
-        requisito: "Declaração da instituição atestando carga horária",
-      },
-    ],
-  },
+// ─── Paleta de cores por índice ───────────────────────────────────────────────
+
+const paletas = [
+  { borda: "border-blue-500",   badge: "bg-blue-100 text-blue-700"   },
+  { borda: "border-emerald-500", badge: "bg-emerald-100 text-emerald-700" },
+  { borda: "border-purple-500", badge: "bg-purple-100 text-purple-700" },
+  { borda: "border-orange-500", badge: "bg-orange-100 text-orange-700" },
+  { borda: "border-pink-500",   badge: "bg-pink-100 text-pink-700"   },
 ];
 
+function iconeArea(area: string, badgeClass: string) {
+  const cor = badgeClass.split(" ")[1]; // ex: "text-blue-700"
+  const cls = `h-5 w-5 ${cor}`;
+  const lower = area.toLowerCase();
+  if (lower.includes("pesquisa")) return <Target className={cls} />;
+  if (lower.includes("exten"))    return <Users  className={cls} />;
+  return <BookOpen className={cls} />;
+}
+
+// ─── Componente ──────────────────────────────────────────────────────────────
+
 const StudentRules = () => {
-  const [rules] = useState<Rule[]>(initialRules);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [expandedSubId, setExpandedSubId] = useState<string | null>(null);
+  const { courses, activeCourseId, setActiveCourseId, activeCourse } = useCourse();
 
-  const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id);
-    setExpandedSubId(null);
-  };
+  const [regras, setRegras] = useState<Regra[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState(false);
 
-  const toggleSubExpand = (id: string) => {
-    setExpandedSubId(expandedSubId === id ? null : id);
-  };
+  // Acordeão principal (área) e sub (item)
+  const [expandedId, setExpandedId]       = useState<string | null>(null);
+  const [expandedItemKey, setExpandedItemKey] = useState<string | null>(null);
 
-  const getIconForArea = (area: string, colorClass: string) => {
-    const iconClass = `h-5 w-5 ${colorClass.split(" ")[1]}`;
-    const areaLower = area.toLowerCase();
+  // ── Busca regras sempre que o curso selecionado mudar ─────────────────────
+  useEffect(() => {
+    if (!activeCourseId) return;
 
-    if (areaLower.includes("pesquisa")) return <Target className={iconClass} />;
-    if (areaLower.includes("extensão") || areaLower.includes("extensao"))
-      return <Users className={iconClass} />;
-    return <BookOpen className={iconClass} />;
-  };
+    setLoading(true);
+    setErro(false);
+    setRegras([]);
+    setExpandedId(null);
+
+    api
+      .get<Regra[]>(`/regras/curso/${activeCourseId}`)
+      .then((resp) => setRegras(resp.data))
+      .catch(() => setErro(true))
+      .finally(() => setLoading(false));
+  }, [activeCourseId]);
+
+  // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+
+      {/* Cabeçalho */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Regras do Curso</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">
+          Regras do Curso
+        </h1>
         <p className="text-sm md:text-base text-slate-500">
-          Consulte os limites de horas, atividades permitidas e requisitos de envio para cada área.
+          Consulte os limites de horas, atividades permitidas e requisitos de
+          envio para cada área.
         </p>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
-        <div className="bg-white p-1 rounded-full shadow-sm shrink-0">
-          <Info className="h-5 w-5 text-blue-600" />
+      {/* Seletor de curso (se o aluno tiver mais de um) */}
+      {courses.length > 1 && (
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-slate-500">Curso:</span>
+          <Select value={activeCourseId} onValueChange={setActiveCourseId}>
+            <SelectTrigger className="w-[280px] bg-white border-slate-200">
+              <SelectValue placeholder="Selecione o curso" />
+            </SelectTrigger>
+            <SelectContent>
+              {courses.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <div className="text-sm">
-          <p className="text-blue-900 font-semibold">
-            Carga horária total exigida: <span className="font-bold">100 horas</span>
-          </p>
-          <p className="text-blue-700">
-            A atividade deve ter pertinência com os Cursos Superiores do Eixo de Tecnologia (ADS e DJD).
+      )}
+
+      {/* Banner informativo */}
+      {!loading && !erro && regras.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
+          <div className="bg-white p-1 rounded-full shadow-sm shrink-0">
+            <Info className="h-5 w-5 text-blue-600" />
+          </div>
+          <div className="text-sm">
+            <p className="text-blue-900 font-semibold">
+              Carga horária total exigida:{" "}
+              <span className="font-bold">{activeCourse.meta}h</span>
+            </p>
+            <p className="text-blue-700">
+              Curso: <strong>{activeCourse.name}</strong>. As atividades devem
+              estar dentro das áreas e limites definidos pelo coordenador.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Estado: carregando */}
+      {loading && (
+        <div className="flex justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-[#0066FF]" />
+        </div>
+      )}
+
+      {/* Estado: erro */}
+      {!loading && erro && (
+        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700">
+          <AlertCircle className="h-5 w-5 shrink-0 mt-0.5 text-red-500" />
+          <p>
+            Não foi possível carregar as regras. Verifique sua conexão e tente
+            novamente.
           </p>
         </div>
-      </div>
+      )}
 
-      <div className="flex flex-col gap-4">
-        {rules.map((rule) => {
-          const isExpanded = expandedId === rule.id;
+      {/* Estado: sem regras cadastradas */}
+      {!loading && !erro && regras.length === 0 && (
+        <div className="text-center py-16 text-slate-400">
+          <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-20" />
+          <p className="font-medium">
+            Nenhuma regra cadastrada para este curso ainda.
+          </p>
+          <p className="text-xs mt-1">
+            O coordenador ainda não configurou as regras de atividades
+            complementares.
+          </p>
+        </div>
+      )}
 
-          return (
-            <Card
-              key={rule.id}
-              className={`bg-white border-l-[6px] ${rule.cor} shadow-sm transition-all duration-200 overflow-hidden flex flex-col`}
-            >
-              {/* --- CABEÇALHO DO ACORDEÃO PRINCIPAL --- */}
-              <div
-                className="flex items-center justify-between p-4 cursor-pointer select-none hover:bg-slate-50/50"
-                onClick={() => toggleExpand(rule.id)}
+      {/* Lista de regras */}
+      {!loading && !erro && (
+        <div className="flex flex-col gap-4">
+          {regras.map((regra, idx) => {
+            const paleta    = paletas[idx % paletas.length];
+            const isExpanded = expandedId === regra.id;
+
+            return (
+              <Card
+                key={regra.id}
+                className={`bg-white border-l-[6px] ${paleta.borda} shadow-sm overflow-hidden`}
               >
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className={`p-2.5 rounded-xl ${rule.bgBadge}`}>
-                    {getIconForArea(rule.area, rule.bgBadge)}
+                {/* ── Cabeçalho do acordeão ── */}
+                <div
+                  className="flex items-center justify-between p-4 cursor-pointer select-none hover:bg-slate-50/50"
+                  onClick={() =>
+                    setExpandedId(isExpanded ? null : regra.id)
+                  }
+                >
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className={`p-2.5 rounded-xl ${paleta.badge}`}>
+                      {iconeArea(regra.area, paleta.badge)}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-800 text-base sm:text-lg">
+                        {regra.area}
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        Limite de {regra.limiteHoras} horas por curso
+                      </p>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className={`${paleta.badge} border-0 font-semibold text-xs px-2 sm:px-3 py-1 hidden sm:inline-flex`}
+                    >
+                      Máx {regra.limiteHoras}h
+                    </Badge>
                   </div>
-                  <h3 className="font-bold text-slate-800 text-base sm:text-lg">
-                    {rule.area}
-                  </h3>
-                  <Badge
-                    variant="secondary"
-                    className={`${rule.bgBadge} border-0 font-semibold text-xs px-2 sm:px-3 py-1 hidden sm:inline-flex`}
-                  >
-                    Max {rule.maxHoras}h
-                  </Badge>
+
+                  <div className="flex items-center gap-2">
+                    {regra.exigeComprovante && (
+                      <Badge
+                        variant="outline"
+                        className="text-orange-600 border-orange-200 bg-orange-50 text-xs hidden sm:inline-flex"
+                      >
+                        Exige Comprovante
+                      </Badge>
+                    )}
+                    <Badge
+                      variant="secondary"
+                      className={`${paleta.badge} border-0 font-semibold text-xs px-2 py-1 sm:hidden`}
+                    >
+                      Máx {regra.limiteHoras}h
+                    </Badge>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400">
+                      <ChevronDown
+                        className={`h-5 w-5 transition-transform duration-300 ${
+                          isExpanded ? "rotate-180" : ""
+                        }`}
+                      />
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className={`${rule.bgBadge} border-0 font-semibold text-xs px-2 py-1 sm:hidden`}
-                  >
-                    Max {rule.maxHoras}h
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 text-slate-400"
-                  >
-                    <ChevronDown
-                      className={`h-5 w-5 transition-transform duration-300 ${
-                        isExpanded ? "rotate-180" : ""
-                      }`}
-                    />
-                  </Button>
-                </div>
-              </div>
+                {/* ── Corpo expandido ── */}
+                <div
+                  className={`transition-all duration-300 ease-in-out px-2 sm:px-5 overflow-hidden ${
+                    isExpanded
+                      ? "max-h-[2000px] opacity-100 pb-5"
+                      : "max-h-0 opacity-0"
+                  }`}
+                >
+                  {/* Alerta de comprovante obrigatório (mobile) */}
+                  {regra.exigeComprovante && (
+                    <div className="mx-2 mb-3 mt-2 flex items-center gap-2 text-xs text-orange-700 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2 sm:hidden">
+                      <Info className="h-3.5 w-3.5 shrink-0" />
+                      Exige envio obrigatório de comprovante
+                    </div>
+                  )}
 
-              {/* --- CORPO DO ACORDEÃO (SUBTÓPICOS) --- */}
-              <div
-                className={`transition-all duration-300 ease-in-out px-2 sm:px-5 overflow-hidden ${
-                  isExpanded
-                    ? "max-h-[2000px] opacity-100 pb-5"
-                    : "max-h-0 opacity-0"
-                }`}
-              >
-                <div className="pt-2 border-t border-slate-100">
-                  <p className="text-sm text-slate-600 leading-relaxed mb-4 mt-4 px-2 sm:px-0">
-                    {rule.descricao}
-                  </p>
-
-                  {rule.atividades.length > 0 ? (
-                    <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
+                  {regra.itens && regra.itens.length > 0 ? (
+                    <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm mt-2">
+                      {/* Cabeçalho da tabela (desktop) */}
                       <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-slate-100 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        <div className="col-span-7">Descrição</div>
-                        <div className="col-span-4">Aproveitamento</div>
-                        <div className="col-span-1 text-center"></div>
+                        <div className="col-span-1" />
+                        <div className="col-span-6">Descrição</div>
+                        <div className="col-span-5">Aproveitamento</div>
                       </div>
 
-                      {/* Lista de Atividades */}
                       <div className="flex flex-col">
-                        {rule.atividades.map((atividade, index) => {
-                          const isSubExpanded = expandedSubId === atividade.id;
-                          const rowBgColor = index % 2 === 0 ? "bg-white" : "bg-slate-50";
+                        {regra.itens.map((item, iIdx) => {
+                          const itemKey    = `${regra.id}-${iIdx}`;
+                          const itemExpand = expandedItemKey === itemKey;
+                          const rowBg      = iIdx % 2 === 0 ? "bg-white" : "bg-slate-50";
 
                           return (
                             <div
-                              key={atividade.id}
-                              className={`border-b border-slate-200 last:border-0 flex flex-col ${rowBgColor}`}
+                              key={item.id ?? itemKey}
+                              className={`border-b border-slate-200 last:border-0 flex flex-col ${rowBg}`}
                             >
-                              {/* Linha Clicável do Subtópico */}
+                              {/* Linha clicável */}
                               <div
                                 className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-4 py-3 items-center cursor-pointer hover:bg-slate-100/70 transition-colors"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  toggleSubExpand(atividade.id);
+                                  setExpandedItemKey(
+                                    itemExpand ? null : itemKey
+                                  );
                                 }}
                               >
-                                <div className="md:col-span-7 text-sm font-semibold text-slate-700 pr-2">
-                                  {atividade.descricao}
+                                <div className="hidden md:flex md:col-span-1 justify-center">
+                                  <ChevronDown
+                                    className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${
+                                      itemExpand ? "rotate-180 text-blue-600" : ""
+                                    }`}
+                                  />
                                 </div>
-                                <div className="md:col-span-4 text-sm text-slate-600 flex justify-between md:block items-center">
-                                  <span className="md:hidden text-xs font-bold text-slate-400 uppercase">Aproveitamento:</span>
+                                <div className="md:col-span-6 text-sm font-semibold text-slate-700">
+                                  {item.descricao}
+                                </div>
+                                <div className="md:col-span-5 text-sm text-slate-600 flex justify-between md:block items-center">
+                                  <span className="md:hidden text-xs font-bold text-slate-400 uppercase">
+                                    Aproveitamento:
+                                  </span>
                                   <Badge
                                     variant="outline"
                                     className="bg-white border-slate-200 text-slate-700 font-medium whitespace-normal text-left h-auto py-1 shadow-sm"
                                   >
-                                    {atividade.aproveitamento}
+                                    {item.aproveitamento}
                                   </Badge>
                                 </div>
-                                <div className="hidden md:flex col-span-1 justify-end">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-slate-400 hover:text-blue-600 pointer-events-none"
-                                  >
-                                    <ChevronDown
-                                      className={`h-4 w-4 transition-transform duration-300 ${
-                                        isSubExpanded ? "rotate-180 text-blue-600" : ""
-                                      }`}
-                                    />
-                                  </Button>
-                                </div>
-                                {/* Mobile Expander Indicator */}
-                                <div className="md:hidden flex items-center justify-center pt-2 pb-1 text-slate-400">
-                                   <span className="text-xs mr-1">{isSubExpanded ? "Ocultar requisito" : "Ver requisito"}</span>
-                                   <ChevronDown className={`h-3 w-3 transition-transform duration-300 ${isSubExpanded ? "rotate-180 text-blue-600" : ""}`} />
+                                {/* Indicador mobile */}
+                                <div className="md:hidden flex items-center justify-center pt-1 pb-0.5 text-slate-400">
+                                  <span className="text-xs mr-1">
+                                    {itemExpand ? "Ocultar requisito" : "Ver requisito"}
+                                  </span>
+                                  <ChevronDown
+                                    className={`h-3 w-3 transition-transform duration-300 ${
+                                      itemExpand ? "rotate-180 text-blue-600" : ""
+                                    }`}
+                                  />
                                 </div>
                               </div>
 
-                              {/* Área Expandida (Requisito) */}
-                              <div
-                                className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                                  isSubExpanded
-                                    ? "max-h-40 opacity-100 border-t border-slate-200/60"
-                                    : "max-h-0 opacity-0"
-                                }`}
-                              >
-                                <div className="px-4 py-3 text-sm text-slate-600 flex flex-col gap-1 bg-blue-50/30">
-                                  <span className="font-semibold text-slate-800 text-xs uppercase tracking-wide">
-                                    Requisito Comprobatório (Documento Necessário)
-                                  </span>
-                                  <span>{atividade.requisito}</span>
+                              {/* Requisito expandido */}
+                              {item.explicacao && (
+                                <div
+                                  className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                                    itemExpand
+                                      ? "max-h-40 opacity-100 border-t border-slate-200/60"
+                                      : "max-h-0 opacity-0"
+                                  }`}
+                                >
+                                  <div className="px-4 py-3 text-sm text-slate-600 flex flex-col gap-1 bg-blue-50/30">
+                                    <span className="font-semibold text-slate-800 text-xs uppercase tracking-wide">
+                                      Detalhes adicionais
+                                    </span>
+                                    <span>{item.explicacao}</span>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
                             </div>
                           );
                         })}
                       </div>
                     </div>
                   ) : (
-                    <div className="p-4 border border-slate-200 border-dashed rounded-xl bg-slate-50 text-center">
+                    <div className="p-4 border border-slate-200 border-dashed rounded-xl bg-slate-50 text-center mt-2">
                       <p className="text-sm text-slate-400 italic">
-                        Nenhuma regra detalhada disponível no momento.
+                        Nenhum item detalhado para esta área.
                       </p>
                     </div>
                   )}
                 </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
