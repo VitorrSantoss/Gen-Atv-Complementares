@@ -24,113 +24,105 @@ import {
   FolderOpen,
   RotateCw,
   Crop as CropIcon,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-// MODIFICAÇÃO 1: Importando o hook
 import { useCourse } from "@/contexts/CourseContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { submissaoService } from "@/services/aluno/SubmissaoService";
+import { api } from "@/lib/api";
 
-// IMPORTAÇÃO DA BIBLIOTECA DE RECORTAR IMAGENS
+// Importação da biblioteca de recortar imagens
 import ReactCrop, { type Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 
-// ✅ Categoria Cultural removida
+// ─── Constantes ──────────────────────────────────────────────────────────────
+
 const categoryLabels: Record<string, string> = {
   pesquisa: "Pesquisa",
   extensao: "Extensão",
   ensino: "Ensino",
 };
 
-const StudentSubmission = () => {
-  // MODIFICAÇÃO 2: Puxando o curso ativo do contexto
-  const { activeCourse } = useCourse();
+// ─── Componente ──────────────────────────────────────────────────────────────
 
+const StudentSubmission = () => {
+  const { activeCourse, activeCourseId } = useCourse();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // ── Formulário ────────────────────────────────────────────────────────────
   const [titulo, setTitulo] = useState("");
   const [categoria, setCategoria] = useState("");
-  // MODIFICAÇÃO: Alterado de dataInicio para semestre
   const [semestre, setSemestre] = useState("");
   const [horas, setHoras] = useState("");
   const [descricao, setDescricao] = useState("");
   const [arquivo, setArquivo] = useState<File | null>(null);
-  const [submitted, setSubmitted] = useState(false);
 
-  // NOVOS ESTADOS PARA O MODAL DE CROP
+  // ── Estado de envio ───────────────────────────────────────────────────────
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submittedId, setSubmittedId] = useState<number | null>(null);
+
+  // ── Crop ──────────────────────────────────────────────────────────────────
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<Crop | null>(null);
-  
   const imageRef = useRef<HTMLImageElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
 
   const categoriaFormatada = useMemo(
     () => (categoria ? categoryLabels[categoria] : "Não selecionada"),
     [categoria]
   );
 
-  // =========================================================================
-  // MODO OFFLINE / AUTO-SAVE
-  // =========================================================================
-  // Para melhorar a experiência do aluno no celular e evitar perda de dados por queda de internet ou atualização acidental da página, 
-  // implementamos um sistema de salvamento automático (Auto-Save).
+  // ── Auto-Save (rascunho) ──────────────────────────────────────────────────
+  const draftKey = `draft_submission_${activeCourseId}`;
 
-/* Explicando a logica criada. 
-        Criamos uma lógica usando o localStorage do navegador. Agora, sempre que o aluno digita qualquer coisa no formulário (Título, Horas, etc.), o aplicativo salva esses dados em segundo plano.
-        Isolamento por Curso: O rascunho é atrelado ao ID do curso selecionado. Se o aluno começar a preencher algo em "Engenharia" e mudar para "Administração", o formulário limpa. 
-        Mas quando ele voltar para "Engenharia", os dados retornam magicamente tudo através deesta logica implementada!
-        Limpeza Inteligente: Quando a atividade é enviada com sucesso, o sistema apaga o rascunho daquele curso para deixar o formulário limpo para a próxima submissão.
- */
-
-  const draftKey = `draft_submission_${activeCourse.id}`;
-
-  // 1. CARREGAR o rascunho quando entra na página ou muda de curso
   useEffect(() => {
-    const savedDraft = localStorage.getItem(draftKey);
-    if (savedDraft) {
+    const saved = localStorage.getItem(draftKey);
+    if (saved) {
       try {
-        const parsedDraft = JSON.parse(savedDraft);
-        setTitulo(parsedDraft.titulo || "");
-        setCategoria(parsedDraft.categoria || "");
-        // ✅ Recupera o semestre
-        setSemestre(parsedDraft.semestre || "");
-        setHoras(parsedDraft.horas || "");
-        setDescricao(parsedDraft.descricao || "");
-
-        // Um pequeno delay evita que o toast dispare antes da interface estar pronta
+        const d = JSON.parse(saved);
+        setTitulo(d.titulo || "");
+        setCategoria(d.categoria || "");
+        setSemestre(d.semestre || "");
+        setHoras(d.horas || "");
+        setDescricao(d.descricao || "");
         setTimeout(() => {
           toast({
             title: "Rascunho recuperado",
             description: "Os dados que estava a preencher foram restaurados.",
           });
         }, 300);
-      } catch (error) {
-        console.error("Erro ao ler rascunho", error);
+      } catch {
+        /* ignora */
       }
     } else {
-      // Se mudar para um curso que não tem rascunho, limpa a tela de texto
       setTitulo("");
       setCategoria("");
       setSemestre("");
       setHoras("");
       setDescricao("");
     }
-  }, [activeCourse.id, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCourseId]);
 
-  // 2. Deixar salvo o rascunho automaticamente quando o usuário digita
   useEffect(() => {
     if (titulo || categoria || semestre || horas || descricao) {
-      const draft = { titulo, categoria, semestre, horas, descricao };
-      localStorage.setItem(draftKey, JSON.stringify(draft));
+      localStorage.setItem(
+        draftKey,
+        JSON.stringify({ titulo, categoria, semestre, horas, descricao })
+      );
     }
   }, [titulo, categoria, semestre, horas, descricao, draftKey]);
 
-  // =========================================================================
-  // LÓGICA DE FICHEIROS E AJUSTE DE IMAGEM
-  // =========================================================================
+  // ── Upload / Crop ─────────────────────────────────────────────────────────
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
@@ -143,57 +135,50 @@ const StudentSubmission = () => {
       return;
     }
 
-    // Se for uma imagem, abrimos o modal de edição (CROP)
     if (file.type.startsWith("image/")) {
       const reader = new FileReader();
-      reader.onload = (event) => {
-        setPreviewSrc(event.target?.result as string);
+      reader.onload = (ev) => {
+        setPreviewSrc(ev.target?.result as string);
         setCrop(undefined);
         setCompletedCrop(null);
         setIsCropModalOpen(true);
       };
       reader.readAsDataURL(file);
     } else {
-      // Se for PDF, anexa diretamente
       setArquivo(file);
     }
   };
 
-  // Rodar a imagem num Canvas e recarregá-la na interface
   const handleRotate = async () => {
     if (!previewSrc) return;
-    
     const image = new Image();
     image.src = previewSrc;
-    await new Promise((resolve) => (image.onload = resolve));
-
+    await new Promise((res) => (image.onload = res));
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    // Roda a imagem 90 graus
     canvas.width = image.height;
     canvas.height = image.width;
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.rotate((90 * Math.PI) / 180);
     ctx.drawImage(image, -image.width / 2, -image.height / 2);
-
     setPreviewSrc(canvas.toDataURL("image/jpeg", 1));
-    // Reset ao Crop após rodar
     setCrop(undefined);
     setCompletedCrop(null);
   };
 
-  // Aplicar o recorte escolhido
   const handleConfirmCrop = async () => {
     if (!previewSrc) return;
 
-    // Se o utilizador não desenhou um recorte, guarda a imagem como está
-    if (!completedCrop || completedCrop.width === 0 || completedCrop.height === 0 || !imageRef.current) {
+    if (
+      !completedCrop ||
+      completedCrop.width === 0 ||
+      completedCrop.height === 0 ||
+      !imageRef.current
+    ) {
       const res = await fetch(previewSrc);
       const blob = await res.blob();
-      const file = new File([blob], "comprovante_ajustado.jpg", { type: "image/jpeg" });
-      setArquivo(file);
+      setArquivo(new File([blob], "comprovante.jpg", { type: "image/jpeg" }));
       handleCancelCrop();
       return;
     }
@@ -202,15 +187,10 @@ const StudentSubmission = () => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    // Calcula a proporção entre o tamanho visual na ecrã e o tamanho real do ficheiro
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
-
     canvas.width = completedCrop.width * scaleX;
     canvas.height = completedCrop.height * scaleY;
-
-    // Desenha apenas a área selecionada no Canvas
     ctx.drawImage(
       image,
       completedCrop.x * scaleX,
@@ -222,12 +202,11 @@ const StudentSubmission = () => {
       canvas.width,
       canvas.height
     );
-
-    // Converte o Canvas no novo ficheiro Final
     canvas.toBlob((blob) => {
       if (blob) {
-        const file = new File([blob], "comprovante_recortado.jpg", { type: "image/jpeg" });
-        setArquivo(file);
+        setArquivo(
+          new File([blob], "comprovante_recortado.jpg", { type: "image/jpeg" })
+        );
         handleCancelCrop();
       }
     }, "image/jpeg", 0.9);
@@ -243,29 +222,30 @@ const StudentSubmission = () => {
 
   const handleRemoveFile = () => {
     setArquivo(null);
-    if (fileRef.current) {
-      fileRef.current.value = "";
-    }
+    if (fileRef.current) fileRef.current.value = "";
   };
 
-  // =========================================================================
+  // ── Lógica de envio ───────────────────────────────────────────────────────
 
-  const limparFormulario = () => {
-    setTitulo("");
-    setCategoria("");
-    setSemestre("");
-    setHoras("");
-    setDescricao("");
-    setArquivo(null);
-    setSubmitted(false);
-    if (fileRef.current) {
-      fileRef.current.value = "";
-    }
-  };
+  /**
+   * Converte um File em Base64 (necessário para enviar como URL de certificado
+   * enquanto o back-end não tem upload real de arquivos).
+   *
+   * NOTA: Quando o back-end implementar um endpoint de upload de arquivo,
+   * substitua esta função pelo upload real e use a URL retornada.
+   */
+  const toBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // ── Validações de campos ──────────────────────────────────────────────
     if (!titulo || !categoria || !semestre || !horas || !arquivo) {
       toast({
         title: "Campos obrigatórios",
@@ -275,58 +255,97 @@ const StudentSubmission = () => {
       return;
     }
 
-    // Forçando a tipagem como 'any' para evitar que o TypeScript
-    // quebre a aplicação caso o CourseContext.tsx não esteja fortemente tipado.
-    const cursoAtual = activeCourse as any;
-
-    if (cursoAtual.categorias) {
-      // ✅ Categoria Cultural removida do keyMap
-      const keyMap: Record<string, string> = {
-        ensino: "Ensino",
-        pesquisa: "Pesquisa",
-        extensao: "Extensao",
-      };
-
-      const catKey = keyMap[categoria];
-      const regraCategoria = cursoAtual.categorias[catKey];
-
-      if (regraCategoria) {
-        const horasRestantes = regraCategoria.limite - regraCategoria.aprovadas;
-        const horasSolicitadas = Number(horas);
-
-        if (horasSolicitadas > horasRestantes) {
-          toast({
-            title: "Limite de horas excedido",
-            description: `Apenas restam ${Math.max(
-              0,
-              horasRestantes
-            )}h disponíveis na categoria ${
-              categoryLabels[categoria]
-            }. (Limite total: ${regraCategoria.limite}h).`,
-            variant: "destructive",
-          });
-          return;
-        }
-      }
+    if (!activeCourseId) {
+      toast({
+        title: "Curso não selecionado",
+        description: "Selecione um curso antes de enviar.",
+        variant: "destructive",
+      });
+      return;
     }
 
-    // Apaga o rascunho quando a submissão dá certo
-    localStorage.removeItem(draftKey);
-    setSubmitted(true);
+    setIsSubmitting(true);
+
+    try {
+      // ── Resolve o alunoId dinamicamente ──────────────────────────────────
+      // Busca primeiro o usuário pelo e-mail do token, depois o registro de aluno.
+      // Isso funciona mesmo que o AuthContext original não exponha alunoId.
+      let alunoId: number;
+
+      // Tenta pegar do contexto (funciona se AuthContext já foi substituído)
+      if ((user as any)?.alunoId) {
+        alunoId = (user as any).alunoId as number;
+      } else {
+        // Fallback: busca via API usando o e-mail do usuário logado
+        const email = (user as any)?.email ?? "";
+        // /usuarios/me é acessível por qualquer autenticado (não exige SUPER_ADMIN)
+        const usuarioResp = await api.get("/usuarios/me");
+        const usuarioId: number = usuarioResp.data.id;
+        // /alunos/me retorna os dados do aluno logado sem precisar de SUPER_ADMIN
+        const alunoResp = await api.get("/alunos/me");
+        alunoId = alunoResp.data.usuarioId as number;
+      }
+
+      // ── PASSO 1: Criar a submissão ────────────────────────────────────────
+      const novaSubmissao = await submissaoService.criar({
+        titulo,
+        descricao,
+        horas: Number(horas),
+        alunoId,
+        cursoId: Number(activeCourseId),
+      });
+
+      // ── PASSO 2: Anexar o certificado ─────────────────────────────────────
+      // Converte o arquivo para base64 (substitua por upload real quando disponível)
+      const base64Url = await toBase64(arquivo);
+
+      await submissaoService.anexarCertificado({
+        nomeArquivo: arquivo.name,
+        urlArquivo: base64Url,
+        submissaoId: novaSubmissao.id,
+      });
+
+      // ── Sucesso ───────────────────────────────────────────────────────────
+      localStorage.removeItem(draftKey);
+      setSubmittedId(novaSubmissao.id);
+      setSubmitted(true);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ??
+        err?.response?.data ??
+        "Erro ao enviar a atividade. Tente novamente.";
+      toast({
+        title: "Erro ao enviar",
+        description: typeof msg === "string" ? msg : "Erro desconhecido.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const limparFormulario = () => {
+    setTitulo("");
+    setCategoria("");
+    setSemestre("");
+    setHoras("");
+    setDescricao("");
+    setArquivo(null);
+    setSubmitted(false);
+    setSubmittedId(null);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  // ── Tela de sucesso ───────────────────────────────────────────────────────
 
   if (submitted) {
     return (
       <div className="w-full p-4 sm:p-6 lg:p-8">
         <div className="max-w-3xl">
           <div className="mb-8">
-            <h1
-              className="text-3xl sm:text-4xl font-bold text-slate-900"
-              style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
-            >
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">
               Nova Atividade
             </h1>
-            {/* MODIFICAÇÃO 3: Exibindo o nome do curso para o aluno na tela de sucesso */}
             <p className="text-slate-500 mt-1 text-sm sm:text-base">
               Registe uma atividade complementar para o curso de{" "}
               <strong className="text-[#0066FF]">{activeCourse.name}</strong>
@@ -340,50 +359,38 @@ const StudentSubmission = () => {
                   <CheckCircle className="h-10 w-10 text-[#00B67A]" />
                 </div>
 
-                <h2
-                  className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2"
-                  style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
-                >
+                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
                   Enviado com sucesso!
                 </h2>
 
-                <p className="text-slate-500 max-w-xl mb-8">
+                <p className="text-slate-500 max-w-xl mb-2">
                   A sua atividade foi registada e será avaliada pela coordenação.
-                  Acompanhe o estado no seu painel.
                 </p>
+                {submittedId && (
+                  <p className="text-xs text-slate-400 mb-8">
+                    Protocolo de envio: <strong>#{submittedId}</strong>
+                  </p>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mb-8">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">
-                      Atividade
-                    </p>
-                    <p className="font-semibold text-slate-900 break-words">
-                      {titulo}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">
-                      Categoria
-                    </p>
-                    <p className="font-semibold text-slate-900">
-                      {categoriaFormatada}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">
-                      Semestre
-                    </p>
-                    <p className="font-semibold text-slate-900">{semestre}</p>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">
-                      Carga horária
-                    </p>
-                    <p className="font-semibold text-slate-900">{horas}h</p>
-                  </div>
+                  {[
+                    { label: "Atividade", value: titulo },
+                    { label: "Categoria", value: categoriaFormatada },
+                    { label: "Semestre", value: semestre },
+                    { label: "Carga horária", value: `${horas}h` },
+                  ].map(({ label, value }) => (
+                    <div
+                      key={label}
+                      className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left"
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">
+                        {label}
+                      </p>
+                      <p className="font-semibold text-slate-900 break-words">
+                        {value}
+                      </p>
+                    </div>
+                  ))}
                 </div>
 
                 <Button
@@ -400,24 +407,24 @@ const StudentSubmission = () => {
     );
   }
 
+  // ── Tela principal do formulário ──────────────────────────────────────────
+
   return (
     <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6 relative">
       {/* Cabeçalho */}
       <div>
-        <h1
-          className="text-3xl sm:text-4xl font-bold text-slate-900"
-          style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
-        >
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">
           Nova Atividade
         </h1>
-        {/* Exibindo o nome do curso para o aluno na tela de formulário */}
         <p className="text-slate-500 mt-1 text-sm sm:text-base">
           Registe uma atividade complementar para o curso de{" "}
           <strong className="text-[#0066FF]">{activeCourse.name}</strong>
         </p>
       </div>
 
-      {/* Layout principal */}
+
+
+      {/* Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
         {/* Formulário */}
         <Card className="xl:col-span-2 border border-slate-200 shadow-sm bg-white rounded-3xl overflow-hidden">
@@ -437,7 +444,7 @@ const StudentSubmission = () => {
                 />
               </div>
 
-              {/* Grid principal dos campos */}
+              {/* Campos secundários */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                 <div className="lg:col-span-5 space-y-2">
                   <Label className="text-slate-700 font-medium">
@@ -448,15 +455,12 @@ const StudentSubmission = () => {
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
-                      {/* ✅ Categoria Cultural removida das opções */}
                       <SelectItem value="pesquisa">Pesquisa</SelectItem>
                       <SelectItem value="extensao">Extensão</SelectItem>
                       <SelectItem value="ensino">Ensino</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/*  MODIFICAÇÃO: Trocado Data de Início por Semestre */}
                 <div className="lg:col-span-4 space-y-2">
                   <Label htmlFor="semestre" className="text-slate-700 font-medium">
                     Semestre *
@@ -470,7 +474,6 @@ const StudentSubmission = () => {
                     onChange={(e) => setSemestre(e.target.value)}
                   />
                 </div>
-
                 <div className="lg:col-span-3 space-y-2">
                   <Label htmlFor="horas" className="text-slate-700 font-medium">
                     Carga Horária *
@@ -479,6 +482,7 @@ const StudentSubmission = () => {
                     id="horas"
                     type="number"
                     placeholder="Ex: 20"
+                    min="1"
                     className="bg-slate-50 border-slate-200 h-11 rounded-xl"
                     value={horas}
                     onChange={(e) => setHoras(e.target.value)}
@@ -488,10 +492,7 @@ const StudentSubmission = () => {
 
               {/* Descrição */}
               <div className="space-y-2">
-                <Label
-                  htmlFor="descricao"
-                  className="text-slate-700 font-medium"
-                >
+                <Label htmlFor="descricao" className="text-slate-700 font-medium">
                   Descrição
                 </Label>
                 <Textarea
@@ -522,7 +523,6 @@ const StudentSubmission = () => {
                     <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center shrink-0">
                       <FileText className="h-6 w-6 text-[#0066FF]" />
                     </div>
-
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-slate-900 truncate">
                         {arquivo.name}
@@ -531,7 +531,6 @@ const StudentSubmission = () => {
                         {(arquivo.size / 1024).toFixed(0)} KB
                       </p>
                     </div>
-
                     <Button
                       type="button"
                       variant="ghost"
@@ -553,7 +552,6 @@ const StudentSubmission = () => {
                       <Upload className="h-4 w-4 mr-2" />
                       Escolher Ficheiro
                     </Button>
-
                     <Button
                       type="button"
                       variant="outline"
@@ -567,12 +565,20 @@ const StudentSubmission = () => {
                 )}
               </div>
 
-              {/* Botão */}
+              {/* Botão de envio */}
               <Button
                 type="submit"
-                className="w-full bg-[#0066FF] hover:bg-blue-700 text-white h-14 rounded-xl text-base font-bold shadow-lg shadow-blue-200 transition-all active:scale-[0.98]"
+                disabled={isSubmitting}
+                className="w-full bg-[#0066FF] hover:bg-blue-700 text-white h-14 rounded-xl text-base font-bold shadow-lg shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-60"
               >
-                Enviar Atividade
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Enviando...
+                  </span>
+                ) : (
+                  "Enviar Atividade"
+                )}
               </Button>
             </form>
           </CardContent>
@@ -580,6 +586,7 @@ const StudentSubmission = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Orientações */}
           <Card className="border border-slate-200 shadow-sm bg-white rounded-3xl overflow-hidden">
             <CardContent className="p-5 sm:p-6">
               <div className="flex items-center gap-3 mb-5">
@@ -593,20 +600,18 @@ const StudentSubmission = () => {
                   </p>
                 </div>
               </div>
-
               <div className="space-y-4 text-sm text-slate-600">
                 <div className="flex gap-3">
                   <CalendarDays className="h-4 w-4 mt-0.5 text-slate-400 shrink-0" />
                   <p>Informe corretamente o semestre em que realizou a atividade.</p>
                 </div>
-
                 <div className="flex gap-3">
                   <Clock3 className="h-4 w-4 mt-0.5 text-slate-400 shrink-0" />
                   <p>
-                    Preencha a carga horária exatamente como consta no comprovante.
+                    Preencha a carga horária exatamente como consta no
+                    comprovante.
                   </p>
                 </div>
-
                 <div className="flex gap-3">
                   <FolderOpen className="h-4 w-4 mt-0.5 text-slate-400 shrink-0" />
                   <p>Envie ficheiros em PDF, JPG ou PNG com no máximo 5MB.</p>
@@ -615,6 +620,7 @@ const StudentSubmission = () => {
             </CardContent>
           </Card>
 
+          {/* Resumo */}
           <Card className="border border-slate-200 shadow-sm bg-white rounded-3xl overflow-hidden">
             <CardContent className="p-5 sm:p-6">
               <div className="flex items-center gap-3 mb-5">
@@ -628,25 +634,23 @@ const StudentSubmission = () => {
                   </p>
                 </div>
               </div>
-
               <div className="space-y-4">
-                <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">
-                    Título
-                  </p>
-                  <p className="text-sm font-medium text-slate-900 break-words">
-                    {titulo || "Não informado"}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">
-                    Categoria
-                  </p>
-                  <p className="text-sm font-medium text-slate-900">
-                    {categoriaFormatada}
-                  </p>
-                </div>
+                {[
+                  { label: "Título", value: titulo || "Não informado" },
+                  { label: "Categoria", value: categoriaFormatada },
+                ].map(({ label, value }) => (
+                  <div
+                    key={label}
+                    className="rounded-2xl bg-slate-50 border border-slate-200 p-4"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">
+                      {label}
+                    </p>
+                    <p className="text-sm font-medium text-slate-900 break-words">
+                      {value}
+                    </p>
+                  </div>
+                ))}
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
@@ -657,7 +661,6 @@ const StudentSubmission = () => {
                       {semestre || "--"}
                     </p>
                   </div>
-
                   <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">
                       Horas
@@ -682,13 +685,12 @@ const StudentSubmission = () => {
         </div>
       </div>
 
-      {/* MODAL DE EDIÇÃO DE IMAGEM COM A BIBLIOTECA DE CROP */}
-      {isCropModalOpen && previewSrc &&
+      {/* ─── MODAL DE CROP ───────────────────────────────────────────────────── */}
+      {isCropModalOpen &&
+        previewSrc &&
         createPortal(
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl w-full max-w-3xl flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 max-h-[95vh]">
-              
-              {/* CABEÇALHO DO MODAL */}
               <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 bg-blue-50 text-[#0066FF] rounded-xl flex items-center justify-center">
@@ -699,7 +701,7 @@ const StudentSubmission = () => {
                       Ajustar Comprovante
                     </h3>
                     <p className="text-xs text-slate-500 font-medium hidden sm:block">
-                      Arraste o rato sobre a imagem para desenhar o recorte.
+                      Arraste sobre a imagem para desenhar o recorte.
                     </p>
                   </div>
                 </div>
@@ -713,28 +715,21 @@ const StudentSubmission = () => {
                 </Button>
               </div>
 
-              {/* CORPO CENTRAL DO MODAL (Onde fica a imagem) */}
               <div className="p-4 bg-slate-100 flex flex-col items-center justify-center relative overflow-auto h-[50vh] sm:h-[60vh]">
-                <div className="relative shadow-sm rounded-lg overflow-hidden bg-white max-w-full">
-                  <ReactCrop
-                    crop={crop}
-                    onChange={(c) => setCrop(c)}
-                    onComplete={(c) => setCompletedCrop(c)}
-                  >
-                    <img
-                      ref={imageRef}
-                      src={previewSrc}
-                      alt="Pré-visualização"
-                      className="max-h-[45vh] sm:max-h-[55vh] w-auto object-contain"
-                    />
-                  </ReactCrop>
-                </div>
-                <p className="text-xs text-slate-400 mt-4 text-center sm:hidden">
-                  Deslize o dedo sobre a imagem para recortar.
-                </p>
+                <ReactCrop
+                  crop={crop}
+                  onChange={(c) => setCrop(c)}
+                  onComplete={(c) => setCompletedCrop(c)}
+                >
+                  <img
+                    ref={imageRef}
+                    src={previewSrc}
+                    alt="Pré-visualização"
+                    className="max-h-[45vh] sm:max-h-[55vh] w-auto object-contain"
+                  />
+                </ReactCrop>
               </div>
 
-              {/* RODAPÉ DO MODAL (Botões) */}
               <div className="p-5 border-t border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
                 <Button
                   type="button"
@@ -745,7 +740,6 @@ const StudentSubmission = () => {
                   <RotateCw className="h-5 w-5" />
                   Rodar 90º
                 </Button>
-
                 <div className="flex gap-3 w-full sm:w-auto">
                   <Button
                     type="button"
@@ -764,7 +758,6 @@ const StudentSubmission = () => {
                   </Button>
                 </div>
               </div>
-
             </div>
           </div>,
           document.body
