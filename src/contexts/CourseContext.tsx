@@ -1,57 +1,130 @@
-{/* ============================================================== */}
-{/* 1. Este ficheiro tem como objetivo garantir que, quando o aluno 
-   seleciona um curso no Dashboard, essa escolha seja lembrada nas outras páginas (Submissão e Notificações).                                             */}
-{/* ============================================================== */}
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { courseService } from "@/services/admin/courseService";
 
-import React, { createContext, useContext, useState } from 'react';
+// ─── Tipos ──────────────────────────────────────────────────────────────────
 
-// Movendo os dados mockados para o contexto para serem globais
-// Adicionado o objeto de categorias com limite e horas aprovadas
-// Horas aprovadas, pendentes e rejeitadas para cada curso, para que seja possível mostrar o progresso do curso no dashboard do aluno
-const initialCourses = [
- { 
-   id: "1", name: "Engenharia de Software", meta: 200, aprovadas: 120, pendentes: 20, rejeitadas: 5,
-   categorias: {
-     Ensino: { limite: 100, aprovadas: 80 },
-     Pesquisa: { limite: 60, aprovadas: 20 },
-     Extensao: { limite: 40, aprovadas: 10 }
-   }
- },
- { 
-   id: "2", name: "Administração", meta: 150, aprovadas: 45, pendentes: 10, rejeitadas: 2,
-   categorias: {
-     Ensino: { limite: 80, aprovadas: 20 },
-     Pesquisa: { limite: 40, aprovadas: 10 },
-     Extensao: { limite: 30, aprovadas: 10 }
-   }
- },
-];
-
-interface CourseContextData {
- courses: typeof initialCourses;
- activeCourseId: string;
- setActiveCourseId: (id: string) => void;
- activeCourse: typeof initialCourses[0];
+export interface CategoriaProgresso {
+  limite: number;
+  aprovadas: number;
 }
 
-const CourseContext = createContext<CourseContextData | undefined>(undefined);
+export interface Course {
+  id: string;
+  name: string;
+  meta: number;
+  aprovadas: number;
+  pendentes: number;
+  rejeitadas: number;
+  categorias?: Record<string, CategoriaProgresso>;
+}
 
-export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
- const [courses] = useState(initialCourses);
- const [activeCourseId, setActiveCourseId] = useState(courses[0].id);
+interface CourseContextType {
+  courses: Course[];
+  activeCourseId: string;
+  setActiveCourseId: (id: string) => void;
+  activeCourse: Course;
+  isLoading: boolean;
+  /**
+   * Atualiza o progresso de horas de um curso com base nas submissões do aluno.
+   * Deve ser chamado após carregar as submissões.
+   */
+  updateProgress: (
+    courseId: string,
+    aprovadas: number,
+    pendentes: number,
+    rejeitadas: number
+  ) => void;
+}
 
- const activeCourse = courses.find((c) => c.id === activeCourseId) || courses[0];
+// ─── Defaults ────────────────────────────────────────────────────────────────
 
- return (
-   <CourseContext.Provider value={{ courses, activeCourseId, setActiveCourseId, activeCourse }}>
-     {children}
-   </CourseContext.Provider>
- );
+const defaultCourse: Course = {
+  id: "",
+  name: "Carregando...",
+  meta: 0,
+  aprovadas: 0,
+  pendentes: 0,
+  rejeitadas: 0,
 };
 
-// Hook personalizado para facilitar o uso
-export const useCourse = () => {
- const context = useContext(CourseContext);
- if (!context) throw new Error("useCourse deve ser usado dentro de um CourseProvider");
- return context;
-};
+// ─── Context ─────────────────────────────────────────────────────────────────
+
+const CourseContext = createContext<CourseContextType | undefined>(undefined);
+
+export function CourseProvider({ children }: { children: ReactNode }) {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [activeCourseId, setActiveCourseId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Busca os cursos do back-end ao montar
+  useEffect(() => {
+    courseService
+      .getAll()
+      .then((data) => {
+        const mapped: Course[] = data.map((c) => ({
+          id: c.id.toString(),
+          name: c.nome,
+          meta: c.cargaHorariaMinima,
+          aprovadas: 0,
+          pendentes: 0,
+          rejeitadas: 0,
+          categorias: {
+            Ensino: { limite: Math.floor(c.cargaHorariaMinima * 0.4), aprovadas: 0 },
+            Pesquisa: { limite: Math.floor(c.cargaHorariaMinima * 0.35), aprovadas: 0 },
+            Extensao: { limite: Math.floor(c.cargaHorariaMinima * 0.25), aprovadas: 0 },
+          },
+        }));
+
+        setCourses(mapped);
+        if (mapped.length > 0) setActiveCourseId(mapped[0].id);
+      })
+      .catch(() => {
+        // fallback vazio — o StudentDashboard mostrará estado de erro
+        setCourses([]);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const updateProgress = (
+    courseId: string,
+    aprovadas: number,
+    pendentes: number,
+    rejeitadas: number
+  ) => {
+    setCourses((prev) =>
+      prev.map((c) =>
+        c.id === courseId ? { ...c, aprovadas, pendentes, rejeitadas } : c
+      )
+    );
+  };
+
+  const activeCourse =
+    courses.find((c) => c.id === activeCourseId) ?? defaultCourse;
+
+  return (
+    <CourseContext.Provider
+      value={{
+        courses,
+        activeCourseId,
+        setActiveCourseId,
+        activeCourse,
+        isLoading,
+        updateProgress,
+      }}
+    >
+      {children}
+    </CourseContext.Provider>
+  );
+}
+
+export function useCourse() {
+  const ctx = useContext(CourseContext);
+  if (!ctx) throw new Error("useCourse must be used within CourseProvider");
+  return ctx;
+}
