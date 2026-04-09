@@ -48,10 +48,10 @@ const CoordinatorSubmissions = () => {
   const handleAction = async (id: number, status: "APROVADA" | "REPROVADA") => {
     try {
       if (status === "APROVADA") {
-        await certificadoService.aprovar(id);
+        await certificadoService.aprovar(id, feedback);
         toast({ title: "Atividade aprovada com sucesso!" });
       } else {
-        await certificadoService.rejeitar(id);
+        await certificadoService.rejeitar(id, feedback);
         toast({ title: "Atividade reprovada!" });
       }
       setSelected(null);
