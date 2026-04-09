@@ -5,6 +5,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { api } from "@/lib/api";
 import { courseService } from "@/services/admin/courseService";
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
@@ -62,12 +63,19 @@ export function CourseProvider({ children }: { children: ReactNode }) {
   const [activeCourseId, setActiveCourseId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Busca os cursos do back-end ao montar
+  // Busca apenas os cursos do aluno logado via /alunos/me/cursos
   useEffect(() => {
-    courseService
-      .getAll()
-      .then((data) => {
-        const mapped: Course[] = data.map((c) => ({
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
+    api
+      .get("/alunos/me/cursos")
+      .then((resp) => {
+        const data = resp.data;
+        const mapped: Course[] = data.map((c: any) => ({
           id: c.id.toString(),
           name: c.nome,
           meta: c.cargaHorariaMinima,
@@ -85,8 +93,22 @@ export function CourseProvider({ children }: { children: ReactNode }) {
         if (mapped.length > 0) setActiveCourseId(mapped[0].id);
       })
       .catch(() => {
-        // fallback vazio — o StudentDashboard mostrará estado de erro
-        setCourses([]);
+        // Fallback para todos os cursos caso não seja perfil aluno
+        courseService
+          .getAll()
+          .then((data) => {
+            const mapped: Course[] = data.map((c) => ({
+              id: c.id.toString(),
+              name: c.nome,
+              meta: c.cargaHorariaMinima,
+              aprovadas: 0,
+              pendentes: 0,
+              rejeitadas: 0,
+            }));
+            setCourses(mapped);
+            if (mapped.length > 0) setActiveCourseId(mapped[0].id);
+          })
+          .catch(() => setCourses([]));
       })
       .finally(() => setIsLoading(false));
   }, []);
