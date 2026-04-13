@@ -8,6 +8,8 @@ import { CourseProvider } from "@/contexts/CourseContext";
 
 import Login from "./pages/Login";
 import EsqueciSenha from "./pages/EsqueciSenha";
+import ValidarCodigo from "./pages/ValidarCodigo";
+import RedefinirSenha from "./pages/RedefinirSenha";
 import NotFound from "./pages/NotFound";
 
 import AdminLayout from "./components/layout/AdminLayout";
@@ -15,7 +17,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminCoordinators from "./pages/admin/AdminCoordinators";
 import AdminClasses from "./pages/admin/AdminClasses";
-import AdminUsers from "./pages/admin/AdminUsers"; // ✅ Importando a Nova Tela de Usuários
+import AdminUsers from "./pages/admin/AdminUsers";
 
 import CoordinatorLayout from "./components/layout/CoordinatorLayout";
 import CoordinatorDashboard from "./pages/coordinator/CoordinatorDashboard";
@@ -41,13 +43,8 @@ const ProtectedRoute = ({
 }) => {
   const { user, isAuthenticated } = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (!user || !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
-  }
+  if (!isAuthenticated) return <Navigate to="/" replace />;
+  if (!user || !allowedRoles.includes(user.role)) return <Navigate to="/" replace />;
 
   return <>{children}</>;
 };
@@ -77,38 +74,22 @@ const AppRoutes = () => {
         }
       />
 
-      <Route
-        path="/esqueci-senha"
-        element={
-          isAuthenticated ? <Navigate to="/" replace /> : <EsqueciSenha />
-        }
-      />
+      {/* Recuperação de senha — públicas */}
+      <Route path="/esqueci-senha" element={isAuthenticated ? <Navigate to="/" replace /> : <EsqueciSenha />} />
+      <Route path="/validar-codigo" element={isAuthenticated ? <Navigate to="/" replace /> : <ValidarCodigo />} />
+      <Route path="/redefinir-senha" element={isAuthenticated ? <Navigate to="/" replace /> : <RedefinirSenha />} />
 
       {/* ROTAS DO SUPER ADMIN */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={["superadmin"]}>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
+      <Route path="/admin" element={<ProtectedRoute allowedRoles={["superadmin"]}><AdminLayout /></ProtectedRoute>}>
         <Route index element={<AdminDashboard />} />
         <Route path="cursos" element={<AdminCourses />} />
         <Route path="turmas" element={<AdminClasses />} />
         <Route path="coordenadores" element={<AdminCoordinators />} />
-        <Route path="usuarios" element={<AdminUsers />} /> {/* ✅ Rota de Usuários Adicionada */}
+        <Route path="usuarios" element={<AdminUsers />} />
       </Route>
 
       {/* ROTAS DO COORDENADOR */}
-      <Route
-        path="/coordenador"
-        element={
-          <ProtectedRoute allowedRoles={["coordenador"]}>
-            <CoordinatorLayout />
-          </ProtectedRoute>
-        }
-      >
+      <Route path="/coordenador" element={<ProtectedRoute allowedRoles={["coordenador"]}><CoordinatorLayout /></ProtectedRoute>}>
         <Route index element={<CoordinatorDashboard />} />
         <Route path="turmas" element={<CoordinatorClasses />} />
         <Route path="alunos" element={<CoordinatorStudents />} />
@@ -117,14 +98,7 @@ const AppRoutes = () => {
       </Route>
 
       {/* ROTAS DO ALUNO */}
-      <Route
-        path="/aluno"
-        element={
-          <ProtectedRoute allowedRoles={["aluno"]}>
-            <StudentLayout />
-          </ProtectedRoute>
-        }
-      >
+      <Route path="/aluno" element={<ProtectedRoute allowedRoles={["aluno"]}><StudentLayout /></ProtectedRoute>}>
         <Route index element={<StudentDashboard />} />
         <Route path="submissao" element={<StudentSubmission />} />
         <Route path="regras" element={<StudentRules />} />
