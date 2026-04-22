@@ -5,7 +5,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   const isLoginRequest = config.url?.includes("/api/auth/login");
 
   if (token && !isLoginRequest) {
@@ -15,4 +15,4 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export { api }; 
+export { api };
