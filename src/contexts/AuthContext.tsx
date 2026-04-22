@@ -56,10 +56,10 @@ function mapRole(perfil: string): UserRole {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
-  /** Restaura a sessão ao carregar a página a partir do localStorage */
+  /** Restaura a sessão ao carregar a página a partir do sessionStorage */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
+    const token = sessionStorage.getItem("token");
+    const savedUser = sessionStorage.getItem("user");
 
     if (!token || !savedUser) return;
 
@@ -69,8 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(parsed);
       // Se alunoId estiver faltando (sessão antiga), será preenchido no próximo login
     } catch {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
     }
   }, []);
 
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { token } = await authService.login({ email, senha });
 
     // 2. Salva o token e configura o header padrão do axios
-    localStorage.setItem("token", token);
+    sessionStorage.setItem("token", token);
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
     // 3. Decodifica o payload para extrair role e subject (email)
@@ -114,15 +114,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const authUser: AuthUser = { email, role, name, usuarioId, alunoId };
-    localStorage.setItem("user", JSON.stringify(authUser));
+    sessionStorage.setItem("user", JSON.stringify(authUser));
     setUser(authUser);
 
     return role;
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
     delete api.defaults.headers.common["Authorization"];
     setUser(null);
   };

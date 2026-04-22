@@ -65,7 +65,7 @@ export function CourseProvider({ children }: { children: ReactNode }) {
 
   // Busca apenas os cursos do aluno logado via /alunos/me/cursos
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (!token) {
       setIsLoading(false);
       return;
