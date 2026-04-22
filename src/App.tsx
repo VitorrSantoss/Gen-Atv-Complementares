@@ -42,10 +42,8 @@ const ProtectedRoute = ({
   allowedRoles: string[];
 }) => {
   const { user, isAuthenticated } = useAuth();
-
   if (!isAuthenticated) return <Navigate to="/" replace />;
   if (!user || !allowedRoles.includes(user.role)) return <Navigate to="/" replace />;
-
   return <>{children}</>;
 };
 
@@ -97,8 +95,17 @@ const AppRoutes = () => {
         <Route path="solicitacoes" element={<CoordinatorSubmissions />} />
       </Route>
 
-      {/* ROTAS DO ALUNO */}
-      <Route path="/aluno" element={<ProtectedRoute allowedRoles={["aluno"]}><StudentLayout /></ProtectedRoute>}>
+      {/* ROTAS DO ALUNO — CourseProvider só carrega aqui, após AuthContext já ter restaurado o header */}
+      <Route
+        path="/aluno"
+        element={
+          <ProtectedRoute allowedRoles={["aluno"]}>
+            <CourseProvider>
+              <StudentLayout />
+            </CourseProvider>
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<StudentDashboard />} />
         <Route path="submissao" element={<StudentSubmission />} />
         <Route path="regras" element={<StudentRules />} />
@@ -115,13 +122,11 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <CourseProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AppRoutes />
-            </BrowserRouter>
-          </CourseProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
