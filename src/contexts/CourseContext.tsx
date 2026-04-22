@@ -71,6 +71,9 @@ export function CourseProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Garante que o header está configurado antes de fazer as requisições
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
     api
       .get("/alunos/me/cursos")
       .then((resp) => {
