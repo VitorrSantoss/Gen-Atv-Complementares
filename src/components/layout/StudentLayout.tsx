@@ -1,8 +1,9 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Upload, Bell, LogOut, Menu, X, BookOpen } from "lucide-react";
+import { LayoutDashboard, Upload, Bell, LogOut, Menu, BookOpen } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const links = [
   { to: "/aluno", icon: LayoutDashboard, label: "Dashboard", end: true },
@@ -14,14 +15,14 @@ const links = [
 const StudentLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const handleLogout = () => { logout(); navigate("/"); };
 
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : "A";
 
   const SidebarContent = () => (
-    <>
+    <div className="flex flex-col h-full bg-sidebar">
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl gradient-accent flex items-center justify-center text-accent-foreground font-bold text-lg">
@@ -37,13 +38,14 @@ const StudentLayout = () => {
           </div>
         </div>
       </div>
-      <nav className="flex-1 p-4 space-y-1">
+      
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {links.map((link) => (
           <NavLink
             key={link.to}
             to={link.to}
             end={link.end}
-            onClick={() => setSidebarOpen(false)}
+            onClick={() => setSheetOpen(false)}
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                 isActive ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
@@ -55,34 +57,37 @@ const StudentLayout = () => {
           </NavLink>
         ))}
       </nav>
-      <div className="p-4 border-t border-sidebar-border">
-        <Button variant="ghost" className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50" onClick={handleLogout}>
+      
+      <div className="p-4 border-t border-sidebar-border mt-auto">
+        <Button variant="ghost" className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 min-h-[44px]" onClick={handleLogout}>
           <LogOut className="h-5 w-5 mr-3" /> Sair
         </Button>
       </div>
-    </>
+    </div>
   );
 
   return (
     <div className="min-h-screen flex bg-background">
-      <aside className="hidden lg:flex lg:w-64 flex-col bg-sidebar fixed inset-y-0 z-30">
+      <aside className="hidden lg:flex lg:w-64 flex-col fixed inset-y-0 z-30 border-r border-sidebar-border">
         <SidebarContent />
       </aside>
-      {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-40">
-          <div className="absolute inset-0 bg-foreground/50" onClick={() => setSidebarOpen(false)} />
-          <aside className="relative w-64 h-full bg-sidebar flex flex-col">
-            <button className="absolute top-4 right-4 text-sidebar-foreground" onClick={() => setSidebarOpen(false)}><X className="h-5 w-5" /></button>
-            <SidebarContent />
-          </aside>
-        </div>
-      )}
-      <main className="flex-1 lg:ml-64">
+      
+      <main className="flex-1 lg:ml-64 flex flex-col min-h-screen">
         <header className="lg:hidden flex items-center gap-3 p-4 border-b border-border bg-card">
-          <button onClick={() => setSidebarOpen(true)}><Menu className="h-6 w-6 text-foreground" /></button>
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]">
+                <Menu className="h-6 w-6 text-foreground" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-[280px]">
+              <SidebarContent />
+            </SheetContent>
+          </Sheet>
           <span className="font-semibold text-foreground">Painel Aluno</span>
         </header>
-        <div className="p-6 lg:p-8">
+        
+        <div className="p-4 md:p-6 lg:p-8 flex-1 overflow-x-hidden">
           <Outlet />
         </div>
       </main>
