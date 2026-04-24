@@ -45,8 +45,8 @@ const CoordinatorClasses = () => {
         turmaService.getAll(),
         cursoService.getAll(),
       ]);
-      setClasses(turmasData);
-      setCourses(cursosData);
+      setClasses(Array.isArray(turmasData) ? turmasData : []);
+      setCourses(Array.isArray(cursosData) ? cursosData : []);
     } catch {
       toast({ title: "Erro", description: "Falha ao sincronizar com o servidor.", variant: "destructive" });
     } finally {
@@ -100,12 +100,19 @@ const CoordinatorClasses = () => {
     setAlunoParaVincular("");
 
     try {
-      const [vinculados, todos] = await Promise.all([
+      const [vinculados, todosResp] = await Promise.all([
         turmaAlunoService.listarAlunos(turma.id),
-        api.get("/alunos").then(r => r.data),
+        api.get("/alunos").then(r => Array.isArray(r.data) ? r.data : []),
       ]);
-      setAlunosDaTurma(vinculados);
-      setTodosAlunos(todos);
+      // Normaliza os dados do back-end para o formato AlunoTurmaResponse
+      const todosNormalizados = todosResp.map((a: any) => ({
+        usuarioId: a.usuarioId ?? a.id,
+        matricula: a.matricula ?? "",
+        nome: a.nome ?? a.email ?? "",
+        email: a.email ?? "",
+      }));
+      setAlunosDaTurma(Array.isArray(vinculados) ? vinculados : []);
+      setTodosAlunos(todosNormalizados);
     } catch {
       toast({ title: "Erro", description: "Falha ao carregar alunos.", variant: "destructive" });
     } finally {
