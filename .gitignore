@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 # PWA Dev files
 dev-dist
+
+# Variáveis de ambiente locais
+.env.development
+.env.local
