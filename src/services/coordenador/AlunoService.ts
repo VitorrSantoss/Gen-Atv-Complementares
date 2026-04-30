@@ -13,6 +13,19 @@ export interface AlunoRequest {
   cursoId: number;
 }
 
+export interface AlunoCsvResponse {
+  totalLinhas: number;
+  sucessos: number;
+  falhas: number;
+  detalhes: {
+    linha: number;
+    email: string;
+    matricula: string;
+    sucesso: boolean;
+    motivo?: string;
+  }[];
+}
+
 export const alunoService = {
   async getAll(): Promise<AlunoResponse[]> {
     const response = await api.get<AlunoResponse[]>("/alunos");
@@ -36,5 +49,24 @@ export const alunoService = {
 
   async delete(id: number): Promise<void> {
     await api.delete(`/alunos/${id}`);
+  },
+
+  //  NOVO MÉTODO (CSV)
+  async uploadCsv(file: File): Promise<AlunoCsvResponse> {
+    const formData = new FormData();
+    formData.append("arquivo", file); // ⚠️ TEM QUE SER "arquivo"
+
+    const response = await api.post<AlunoCsvResponse>(
+      "/alunos/lote/csv",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        validateStatus: (status) => status >= 200 && status < 300 || status === 207,
+      }
+    );
+
+    return response.data;
   },
 };
