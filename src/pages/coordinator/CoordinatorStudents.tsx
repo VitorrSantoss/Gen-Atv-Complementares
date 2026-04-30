@@ -91,8 +91,7 @@ const CoordinatorStudents = () => {
   const filtered = useMemo(() => {
     return alunos.filter((a) => {
       const matchesCourse =
-        courseFilter === "todos" ||
-        String(a.cursoId) === courseFilter;
+        courseFilter === "todos" || String(a.cursoId) === courseFilter;
 
       const term = search.toLowerCase();
       const matchesSearch =
@@ -108,7 +107,7 @@ const CoordinatorStudents = () => {
 
   const currentAlunos = filtered.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const handleCreate = async () => {
@@ -136,59 +135,59 @@ const CoordinatorStudents = () => {
   };
 
   const handleUploadCsv = async () => {
-  if (!csvFile) {
-    toast({ title: "Selecione um CSV", variant: "destructive" });
-    return;
-  }
+    if (!csvFile) {
+      toast({ title: "Selecione um CSV", variant: "destructive" });
+      return;
+    }
 
-  try {
-    const result = await alunoService.uploadCsv(csvFile);
+    try {
+      const result = await alunoService.uploadCsv(csvFile);
 
-    const erros = result.detalhes.filter((d: any) => !d.sucesso);
+      const erros = result.detalhes.filter((d: any) => !d.sucesso);
 
-    const resumo: Record<string, number> = {};
+      const resumo: Record<string, number> = {};
 
-erros.forEach((e: any) => {
-  const motivo = e.motivo.toLowerCase();
+      erros.forEach((e: any) => {
+        const motivo = e.motivo.toLowerCase();
 
-  let chave = "Erro desconhecido";
+        let chave = "Erro desconhecido";
 
-  if (motivo.includes("já existe")) {
-    chave = "Usuários já existentes";
-  } else if (motivo.includes("cursoid")) {
-    chave = "Problema no curso";
-  } else if (motivo.includes("matricula")) {
-    chave = "Problema na matrícula";
-  } else if (motivo.includes("email")) {
-    chave = "Problema no email";
-  } else if (motivo.includes("não pode estar vazio")) {
-    chave = "Campos obrigatórios não preenchidos";
-  } else if (motivo.includes("número inteiro")) {
-    chave = "Valor inválido";
-  }
+        if (motivo.includes("já existe")) {
+          chave = "Usuários já existentes";
+        } else if (motivo.includes("cursoid")) {
+          chave = "Problema no curso";
+        } else if (motivo.includes("matricula")) {
+          chave = "Problema na matrícula";
+        } else if (motivo.includes("email")) {
+          chave = "Problema no email";
+        } else if (motivo.includes("não pode estar vazio")) {
+          chave = "Campos obrigatórios não preenchidos";
+        } else if (motivo.includes("número inteiro")) {
+          chave = "Valor inválido";
+        }
 
-  resumo[chave] = (resumo[chave] || 0) + 1;
-});
+        resumo[chave] = (resumo[chave] || 0) + 1;
+      });
 
-    const mensagemResumo =
-      Object.entries(resumo)
-        .map(([erro, qtd]) => `${qtd} ${erro}`)
-        .join(" | ") || "Importação realizada com sucesso";
+      const mensagemResumo =
+        Object.entries(resumo)
+          .map(([erro, qtd]) => `${qtd} ${erro}`)
+          .join(" | ") || "Importação realizada com sucesso";
 
-    toast({
-      title: "Resultado do CSV",
-      description: mensagemResumo,
-      variant: result.falhas > 0 ? "destructive" : "default",
-    });
+      toast({
+        title: "Resultado do CSV",
+        description: mensagemResumo,
+        variant: result.falhas > 0 ? "destructive" : "default",
+      });
 
-    setDialogOpen(false);
-    setCsvFile(null);
-    loadData();
-    setCurrentPage(1);
-  } catch {
-    toast({ title: "Erro ao enviar CSV", variant: "destructive" });
-  }
-};
+      setDialogOpen(false);
+      setCsvFile(null);
+      loadData();
+      setCurrentPage(1);
+    } catch {
+      toast({ title: "Erro ao enviar CSV", variant: "destructive" });
+    }
+  };
 
   return (
     <div className="p-8 space-y-6">
@@ -256,9 +255,7 @@ erros.forEach((e: any) => {
                 <Input
                   type="file"
                   accept=".csv"
-                  onChange={(e) =>
-                    setCsvFile(e.target.files?.[0] || null)
-                  }
+                  onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
                 />
 
                 <Button onClick={handleUploadCsv} className="w-full">
