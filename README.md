@@ -1,25 +1,17 @@
-# Sistema de Gestão de Atividades Complementares - SENAC
+# Sistema de Gestão de Atividades Complementares — SENAC
 
 <div align="center">
 
-## 🚧 Status do Projeto
+![Status](https://img.shields.io/badge/Status-Em%20Produção-green?style=for-the-badge)
+![Deploy](https://img.shields.io/badge/Deploy-Vercel-black?style=for-the-badge&logo=vercel)
 
-![Status](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow?style=for-the-badge)
-
-## 🛠️ Tecnologias Utilizadas
-
-<p>
-  <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react" />
-  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript" />
-  <img src="https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite" />
-  <img src="https://img.shields.io/badge/TailwindCSS-3-38B2AC?style=for-the-badge&logo=tailwind-css" />
-</p>
+**🔗 [Acessar Aplicação](https://progress-hub-six.vercel.app)**
 
 </div>
 
 ---
 
-> Projeto de desenvolvimento de software acadêmico para **gestão e validação de atividades complementares em ambiente universitário**.
+> Plataforma web para gestão e validação de atividades complementares acadêmicas do SENAC, com suporte a múltiplos perfis de usuário, notificações por e-mail e instalação como PWA.
 
 ---
 
@@ -29,59 +21,68 @@
 | --------------- | ------------------------------------------- |
 | **Instituição** | SENAC                                       |
 | **Curso**       | Análise e Desenvolvimento de Sistemas (ADS) |
-| **Disciplina**  | Projeto Integrador / Desenvolvimento Web    |
+| **Disciplina**  | Projeto Integrador                          |
 | **Semestre**    | 2026.1                                      |
 
 ---
 
-## 📋 Sobre o Projeto
+## 🛠️ Tecnologias Utilizadas
 
-O **Sistema de Gestão de Atividades Complementares** é uma aplicação web desenvolvida para digitalizar e automatizar o processo de registro, submissão e validação de horas complementares exigidas pelos cursos de graduação do SENAC.
-
-As atividades complementares são requisito curricular obrigatório em cursos de nível superior, conforme as Diretrizes Curriculares Nacionais (DCN) estabelecidas pelo MEC. Atualmente, em muitas instituições, esse processo ocorre de forma manual, com entrega de documentos físicos, controle em planilhas e comunicação descentralizada, gerando ineficiências tanto para os alunos quanto para as coordenações.
-
-Este sistema propõe uma solução integrada que atende a três perfis de usuário distintos: o **aluno**, que submete certificados digitalmente; o **coordenador**, que analisa e valida as submissões; e o **administrador do sistema**, que gerencia cursos e coordenadores de forma centralizada.
-
----
-
-## 🎯 Objetivos
-
-### Objetivo Geral
-
-Desenvolver uma plataforma web responsiva que permita a gestão completa do ciclo de vida das atividades complementares, desde a submissão pelo aluno até a validação final pelo coordenador, promovendo rastreabilidade, transparência e eficiência no processo acadêmico.
-
-### Objetivos Específicos
-
-- Permitir que alunos submetam comprovantes de atividades (PDF, JPG, PNG) diretamente pelo sistema;
-- Automatizar o acompanhamento de horas aprovadas, pendentes e rejeitadas por aluno e por área;
-- Disponibilizar ao coordenador uma fila de análise com visualização do documento e campo de feedback;
-- Oferecer ao administrador controle sobre cursos, coordenadores e suas vinculações;
-- Implementar um motor de regras configurável que define limites de horas por categoria de atividade;
-- Garantir uma experiência de uso intuitiva e responsiva para dispositivos móveis e desktops.
+| Tecnologia | Versão | Finalidade |
+|---|---|---|
+| React | 18 | Biblioteca principal de UI |
+| TypeScript | 5 | Tipagem estática |
+| Vite | 5 | Bundler e dev server |
+| TailwindCSS | 3 | Estilização |
+| React Router DOM | 6 | Roteamento client-side |
+| Axios | — | Requisições HTTP |
+| Recharts | — | Gráficos e dashboards |
+| shadcn/ui | — | Componentes de UI (Radix UI) |
+| vite-plugin-pwa | — | Progressive Web App |
 
 ---
 
-## 🧩 Funcionalidades por Perfil
+## 📋 Funcionalidades Implementadas
 
 ### 👨‍🎓 Aluno (`/aluno`)
-
-- **Dashboard pessoal** com progresso de horas por curso (aprovadas, pendentes, rejeitadas);
-- **Submissão de atividades** com preenchimento de título, categoria, carga horária, data e upload de comprovante (PDF/imagem, limite de 5MB);
-- **Central de notificações** com histórico de status das submissões e feedback do coordenador.
+- Dashboard com progresso de horas por curso (aprovadas, pendentes, rejeitadas)
+- Seletor de cursos — exibe apenas os cursos nos quais o aluno está matriculado
+- Barras de progresso por categoria (Ensino, Pesquisa, Extensão)
+- Submissão de atividades com upload de comprovante (PDF/imagem, até 5MB) com ferramenta de corte de imagem
+- Auto-save de rascunho por curso
+- Extrato em PDF via impressão do browser
+- Central de notificações com status em tempo real, fixar e marcar como lida
+- Regras do curso — exibe as regras de atividades configuradas pelo coordenador
+- Recuperação de senha via código por e-mail
 
 ### 👩‍🏫 Coordenador (`/coordenador`)
+- Dashboard analítico com gráficos de horas por área e distribuição de status
+- Gestão de turmas com criação, edição e exclusão
+- Vinculação de alunos a turmas com validação de matrícula no curso
+- Gestão de alunos com busca e filtros
+- Motor de regras — configuração de limites de horas por área de atividade
+- Soma automática das regras atualiza a carga horária mínima do curso
+- Fila de solicitações pendentes com visualização de certificado inline
+- Aprovação/reprovação com feedback enviado por e-mail ao aluno
+- Histórico em modo somente leitura (botão olho) — submissões já avaliadas não podem ser reeditadas
+- Envio de e-mail automático ao aprovar ou reprovar (SendGrid)
 
-- **Dashboard analítico** com gráficos de horas por área e status das solicitações;
-- **Gestão de alunos** com cadastro, busca por nome ou CPF e acompanhamento individual de progresso;
-- **Motor de regras** para configuração dos limites máximos de horas por categoria (Pesquisa, Extensão, Ensino, Cultural, Social);
-- **Fila de solicitações** com visualização do comprovante anexado (PDF inline / imagem), campo de feedback e ações de aprovar ou rejeitar;
-- **Notificações** de novas submissões via popover com indicador de lidas/não lidas.
+### 🔐 Super Admin (`/admin`)
+- Dashboard com métricas globais, gráfico de crescimento de alunos e distribuição de perfis
+- Gestão de usuários com paginação, busca e filtro por perfil
+- Gestão de cursos com CRUD completo
+- Gestão de turmas
+- Gestão de coordenadores com vínculo a cursos (regra: 1 coordenador por curso, 1 coordenador pode ter N cursos)
 
-### 🔐 Super Administrador (`/admin`)
+### 🔒 Autenticação
+- Login com seleção de perfil e validação cruzada (impede login no perfil errado)
+- JWT armazenado em `sessionStorage` — sessão expira ao fechar o navegador
+- Recuperação de senha em 3 etapas: e-mail → código de 6 dígitos → nova senha
 
-- **Dashboard administrativo** com visão consolidada de cursos, coordenadores, alunos e pendências;
-- **Gestão de cursos** com cadastro, vínculo com coordenadores, código do curso e controle de status (ativo/inativo);
-- **Gestão de coordenadores** com cadastro, e-mail e associação a múltiplos cursos.
+### 📱 PWA
+- Instalável como aplicativo no celular e desktop
+- Ícones adaptáveis para Android e iOS
+- Service Worker com atualização automática
 
 ---
 
@@ -92,203 +93,114 @@ src/
 ├── assets/                  # Imagens e recursos estáticos
 ├── components/
 │   ├── layout/              # Layouts por perfil (Admin, Coordenador, Aluno)
-│   └── ui/                  # Componentes de UI (shadcn/ui)
+│   └── ui/                  # Componentes shadcn/ui
 ├── contexts/
-│   └── AuthContext.tsx      # Contexto de autenticação e controle de perfil
-├── hooks/
-│   ├── use-mobile.tsx       # Hook para detecção de dispositivo móvel
-│   └── use-toast.ts         # Hook para sistema de notificações (toast)
+│   ├── AuthContext.tsx      # Autenticação JWT e controle de perfil
+│   └── CourseContext.tsx    # Cursos do aluno logado
+├── hooks/                   # use-mobile, use-toast
 ├── lib/
-│   └── utils.ts             # Utilitários gerais (cn, clsx, tailwind-merge)
+│   ├── api.ts               # Instância axios com interceptor de token
+│   └── utils.ts             # Utilitários (cn, clsx)
 ├── pages/
-│   ├── admin/               # Páginas do perfil Super Admin
-│   │   ├── AdminDashboard.tsx
-│   │   ├── AdminCourses.tsx
-│   │   └── AdminCoordinators.tsx
-│   ├── coordinator/         # Páginas do perfil Coordenador
-│   │   ├── CoordinatorDashboard.tsx
-│   │   ├── CoordinatorStudents.tsx
-│   │   ├── CoordinatorRules.tsx
-│   │   └── CoordinatorSubmissions.tsx
-│   ├── student/             # Páginas do perfil Aluno
-│   │   ├── StudentDashboard.tsx
-│   │   ├── StudentSubmission.tsx
-│   │   └── StudentNotifications.tsx
-│   ├── Login.tsx            # Página de autenticação com seleção de perfil
-│   └── NotFound.tsx         # Página 404
-├── App.tsx                  # Rotas, providers e proteção de rotas
-├── main.tsx                 # Ponto de entrada da aplicação
-└── index.css                # Estilos globais, variáveis CSS e design tokens
+│   ├── admin/               # AdminDashboard, AdminCourses, AdminCoordinators, AdminClasses, AdminUsers
+│   ├── coordinator/         # CoordinatorDashboard, CoordinatorStudents, CoordinatorRules,
+│   │                        # CoordinatorSubmissions, CoordinatorClasses
+│   ├── student/             # StudentDashboard, StudentSubmission, StudentNotifications, StudentRules
+│   ├── Login.tsx
+│   ├── EsqueciSenha.tsx
+│   ├── ValidarCodigo.tsx
+│   └── RedefinirSenha.tsx
+├── services/
+│   ├── admin/               # courseService, classService, coordService, userService
+│   ├── aluno/               # SubmissaoService
+│   ├── coordenador/         # CertificadoService, TurmaService, TurmaAlunoService,
+│   │                        # AlunoService, RegraService, CursoService, DashboardService
+│   └── authService.ts
+├── App.tsx
+├── main.tsx
+└── index.css
 ```
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
-
-### Frontend
-
-| Tecnologia                                    | Versão | Finalidade                 |
-| --------------------------------------------- | ------ | -------------------------- |
-| [React](https://react.dev/)                   | 18     | Biblioteca principal de UI |
-| [TypeScript](https://www.typescriptlang.org/) | 5      | Tipagem estática           |
-| [Vite](https://vitejs.dev/)                   | 5      | Bundler e dev server       |
-| [React Router DOM](https://reactrouter.com/)  | 6      | Roteamento client-side     |
-| [TailwindCSS](https://tailwindcss.com/)       | 3      | Estilização                |
-
----
-
-## ⚙️ Como Executar o Projeto
+## ⚙️ Como Executar
 
 ### Pré-requisitos
+- Node.js v18+
+- npm v9+
 
-- [Node.js](https://nodejs.org/) v18 ou superior
-- [npm](https://www.npmjs.com/) v9+ ou [yarn](https://yarnpkg.com/) v1.22+
-
-### Instalação e Execução
+### Instalação
 
 ```bash
-# 1. Clone o repositório
-git clone https://github.com/seu-usuario/atividades-complementares.git
+# Clone o repositório
+git clone https://github.com/seu-usuario/Gen-Atv-Complementares.git
+cd Gen-Atv-Complementares
 
-# 2. Acesse o diretório do projeto
-cd atividades-complementares
-
-# 3. Instale as dependências
+# Instale as dependências
 npm install
 
-# 4. Inicie o servidor de desenvolvimento
+# Configure a URL da API
+# Crie um arquivo .env.local na raiz:
+echo "VITE_API_URL=http://localhost:8080" > .env.local
+
+# Inicie o servidor de desenvolvimento
 npm run dev
 ```
 
-A aplicação estará disponível em `http://localhost:8080`.
+A aplicação estará disponível em `http://localhost:5173`.
 
-### Scripts Disponíveis
-
-```bash
-npm run dev       # Inicia o servidor de desenvolvimento (HMR)
-npm run build     # Gera o build de produção na pasta /dist
-npm run preview   # Visualiza o build de produção localmente
-npm run test      # Executa os testes unitários com Vitest
-```
-
----
-
-## 🔑 Credenciais de Acesso (Ambiente de Demonstração)
-
-> ⚠️ **Atenção:** O sistema utiliza autenticação simulada (mock) para fins de demonstração acadêmica. Qualquer e-mail e senha são aceitos e o perfil é definido pela seleção na tela de login.
-
-| Perfil      | E-mail (Exemplo)         | Redirecionamento |
-| ----------- | ------------------------ | ---------------- |
-| Aluno       | `joao@aluno.com`         | `/aluno`         |
-| Coordenador | `maria@universidade.com` | `/coordenador`   |
-| Super Admin | `admin@sistema.com`      | `/admin`         |
-
----
-
-## 🔄 Fluxo de Uso do Sistema
-
-```
-[Aluno]
-  │
-  ├─ Faz login → Acessa Dashboard → Visualiza progresso de horas
-  │
-  └─ Submete atividade → Upload de comprovante → Aguarda avaliação
-              │
-              ▼
-        [Coordenador]
-              │
-              ├─ Recebe notificação → Acessa fila de solicitações
-              │
-              ├─ Visualiza comprovante → Escreve feedback → Aprova ou Rejeita
-              │
-              └─ Configuração do motor de regras (limites por área)
-                            │
-                            ▼
-                  [Super Admin]
-                            │
-                            ├─ Gerencia cursos (cadastro, coordenadores vinculados)
-                            │
-                            └─ Gerencia coordenadores (cadastro, cursos vinculados)
-```
-
----
-
-## 🎨 Design e Acessibilidade
-
-O sistema adota um design system próprio com tokens de cor definidos em CSS custom properties (variáveis), garantindo:
-
-- **Tema consistente** com paleta de cores primárias (azul), acentuadas (laranja) e semânticas (sucesso, aviso, erro);
-- **Sidebar responsiva** com versões desktop fixa e mobile em drawer (gaveta deslizante);
-- **Tipografia hierárquica** com as fontes _Plus Jakarta Sans_ (títulos) e _Inter_ (corpo de texto);
-- **Componentes acessíveis** baseados em Radix UI (ARIA compliant);
-- **Layout responsivo** otimizado para telas de 320px a 1920px de largura.
-
----
-
-## 🚧 Limitações Atuais e Trabalhos Futuros
-
-O projeto encontra-se em fase de desenvolvimento com frontend funcional e dados mockados. As seguintes melhorias estão previstas para versões futuras:
-
-- **Integração com backend real** (API REST ou GraphQL) com banco de dados relacional;
-- **Sistema de autenticação** com JWT e controle de sessão;
-- **Armazenamento de arquivos** em serviço de nuvem (ex: AWS S3, Supabase Storage);
-- **Exportação de relatórios** em PDF para coordenadores e alunos;
-- **Sistema de e-mail** para notificações automáticas de aprovação/rejeição;
-- **Painel de auditoria** com histórico completo de ações;
-- **Testes de integração e E2E** com Playwright ou Cypress;
-- **CI/CD** com GitHub Actions para deploy automatizado.
-
----
-
-## 🤝 Contribuição
-
-Este é um projeto acadêmico de caráter educacional. Contribuições, sugestões e correções são bem-vindas por meio de _pull requests_ ou abertura de _issues_ no repositório.
+### Scripts
 
 ```bash
-# Crie uma branch para sua feature
-git checkout -b feature/minha-feature
-
-# Faça commit das suas alterações
-git commit -m "feat: descrição da feature"
-
-# Envie para o repositório remoto
-git push origin feature/minha-feature
-
-# Abra um Pull Request
+npm run dev       # Servidor de desenvolvimento
+npm run build     # Build de produção
+npm run preview   # Visualiza o build localmente
+npm run test      # Testes unitários (Vitest)
 ```
 
 ---
 
-## 📄 Licença
+## 🌐 Deploy
 
-Este projeto é desenvolvido para fins **exclusivamente acadêmicos** no âmbito do curso de Análise e Desenvolvimento de Sistemas do SENAC. O uso comercial não é autorizado sem prévia aprovação dos autores.
+| Serviço | URL |
+|---|---|
+| Frontend (Vercel) | https://progress-hub-six.vercel.app |
+| API (Render) | https://api-senac-5zz7.onrender.com |
+
+### Variáveis de ambiente (Vercel)
+```
+VITE_API_URL=https://api-senac-5zz7.onrender.com
+```
+
+---
+
+## 🔄 Fluxo Principal
+
+```
+Aluno → Login → Dashboard → Submete atividade com comprovante
+                                        ↓
+                              Coordenador recebe na fila
+                                        ↓
+                         Visualiza certificado → Feedback → Aprova/Rejeita
+                                        ↓
+                         Aluno recebe e-mail automático + notificação no sistema
+```
 
 ---
 
 ## 👥 Autores
 
-Este projeto foi desenvolvido com dedicação pela equipe acadêmica:
-
-<div align="center">
-
-| Integrantes      |
-| ---------------- |
-| Renan Souza      |
-| Vitória Barboza  |
+| Integrante |
+|---|
+| Jorge Figueredo |
+| Vitor Santos |
+| Lucas Vinícius |
+| Renan Souza |
 | Antonio Vinícius |
-| Lucas Vinícius   |
-| Jorge Figueredo  |
-| Vitor Santos     |
-
-</div>
-
-> _"A educação é a arma mais poderosa que você pode usar para mudar o mundo."_  
-> — **Nelson Mandela**
+| Maria Vitória |
 
 ---
 
 <div align="center">
-
 Feito com ❤️ para o SENAC · 2026
-
 </div>
