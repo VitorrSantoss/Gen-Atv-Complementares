@@ -15,6 +15,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminCoordinators from "./pages/admin/AdminCoordinators";
 import AdminClasses from "./pages/admin/AdminClasses";
+import AdminUsers from "./pages/admin/AdminUsers";
 
 import CoordinatorLayout from "./components/layout/CoordinatorLayout";
 import CoordinatorDashboard from "./pages/coordinator/CoordinatorDashboard";
@@ -90,6 +91,7 @@ const AppRoutes = () => {
         <Route path="cursos" element={<AdminCourses />} />
         <Route path="turmas" element={<AdminClasses />} />
         <Route path="coordenadores" element={<AdminCoordinators />} />
+        <Route path="usuarios" element={<AdminUsers />} />
       </Route>
 
       <Route
