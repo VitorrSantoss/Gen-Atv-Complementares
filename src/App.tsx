@@ -14,10 +14,12 @@ import AdminLayout from "./components/layout/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminCoordinators from "./pages/admin/AdminCoordinators";
+import AdminClasses from "./pages/admin/AdminClasses";
 
 import CoordinatorLayout from "./components/layout/CoordinatorLayout";
 import CoordinatorDashboard from "./pages/coordinator/CoordinatorDashboard";
 import CoordinatorStudents from "./pages/coordinator/CoordinatorStudents";
+import CoordinatorClasses from "./pages/coordinator/CoordinatorClasses";
 import CoordinatorRules from "./pages/coordinator/CoordinatorRules";
 import CoordinatorSubmissions from "./pages/coordinator/CoordinatorSubmissions";
 
@@ -86,6 +88,7 @@ const AppRoutes = () => {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="cursos" element={<AdminCourses />} />
+        <Route path="turmas" element={<AdminClasses />} />
         <Route path="coordenadores" element={<AdminCoordinators />} />
       </Route>
 
@@ -98,6 +101,7 @@ const AppRoutes = () => {
         }
       >
         <Route index element={<CoordinatorDashboard />} />
+        <Route path="turmas" element={<CoordinatorClasses />} />
         <Route path="alunos" element={<CoordinatorStudents />} />
         <Route path="regras" element={<CoordinatorRules />} />
         <Route path="solicitacoes" element={<CoordinatorSubmissions />} />
@@ -127,9 +131,9 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
 
-        {/* ✅ MODIFICAÇÃO: Envolvendo a aplicação com o CourseProvider */}
+        {/*  MODIFICAÇÃO: Envolvendo a aplicação com o CourseProvider */}
         {/* A partir daqui, como o BrowserRouter e o AppRoutes estão DENTRO do CourseProvider, 
-            todas as páginas do seu sistema conseguem "enxergar" e usar os dados do curso atual! */}
+            todas as páginas do sistema conseguem "enxergar" e usar os dados do curso atual! */}
         <CourseProvider>
           <Toaster />
           <Sonner />
